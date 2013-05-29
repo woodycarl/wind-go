@@ -1,0 +1,34 @@
+{{define "content"}}
+<!-- 数据完整率 -->
+<div class="dig">
+	<div class="modal-header">
+		<h3>数据完整率</h3>
+	</div>
+
+	<div class="modal-body">
+
+<table class="table table-condensed">
+	<thead>
+		<tr>
+			<th>时间</th>
+			<th>数据超标比例</th>
+		</tr>
+	</thead>
+	<tbody>
+	{{range .cm}}
+	<tr><td>{{.Year}}-{{.Month}}</td><td>{{printf "%0.2f" .Sr}}</td></tr>
+	{{end}}
+	</tbody>
+</table>
+<p>选用日期为
+	<span class="text-success">{{.start}}</span>~
+	<span class="text-success">{{.end}}</span>
+</p>
+
+	</div>
+
+	<div class="modal-footer">
+		<div class="message"></div>
+	</div>
+</div><!-- /数据完整率 -->
+{{end}}

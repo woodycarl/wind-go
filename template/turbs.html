@@ -1,0 +1,31 @@
+{{define "content"}}
+<!-- Turbs -->
+<div class="dig">
+	<div class="modal-header">
+		<h3>测风塔不同高度的湍流强度</h3>
+	</div>
+
+	<div class="modal-body">
+
+<table class="table table-condensed">
+	<thead>
+		<tr>
+			<th>测风高度</th><th>湍流强度</th>
+		</tr>
+	</thead>
+	<tbody>
+		{{range .turbs}}
+		<tr>
+			<th>Ch{{.Channel}}({{.Height}}m)</th><th>{{printf "%0.3f" .Turb}}</th>
+		</tr>
+		{{end}}
+	</tbody>
+</table>
+
+	</div>
+
+	<div class="modal-footer">
+		<div class="message"></div>
+	</div>
+</div><!-- /Turbs -->
+{{end}}

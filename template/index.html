@@ -1,0 +1,30 @@
+{{define "content"}}
+<!-- 首页 载入原始数据文件 -->
+<div class="dig" id="load_file">
+	<div class="modal-header">
+		<h3>选择原始数据文件</h3>
+	</div>
+
+	<div class="modal-body">
+		<form method="post" action="/data" enctype="multipart/form-data">
+			<span class="btn fileinput-button">
+				<i class="icon-upload"></i>
+				<span>载入文件</span>
+				<input id="files" name="files" type="file" multiple>
+			</span>
+
+			<input type="submit" value="上载" id="file-submit" class="hidden">
+		</form>
+
+		<div id="file_list" class="file-list"></div>
+	</div>
+
+	<div class="modal-footer">
+		<div class="message"></div>
+		<button class="btn btn-primary disabled" id="load_file_next">载入文件</button>
+	</div>
+</div><!-- /首页 载入原始数据文件 -->
+<script src="/js/ui.js"></script>
+<script src="/js/index.js"></script>
+
+{{end}}

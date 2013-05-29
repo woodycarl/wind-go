@@ -1,0 +1,107 @@
+{{define "content"}}
+<!-- Wvp-Fig -->
+<div class="dig">
+	<div class="modal-header">
+		<h3></h3>
+	</div>
+
+	<div class="modal-body">
+
+<div id="chart_wvp">
+{{range $i,$v:= .wvps}}
+<div id="chart_wvp_{{$i}}"></div>
+
+<table class="table table-condensed">
+	<caption>{{.Title}}</caption>
+	<thead>
+		<tr>
+			<th>时间({{.Unit}})</th>
+			{{range .Cats}}<th>{{.}}</th>{{end}}<th>平均</th>
+		</tr>
+	</thead>
+	<tbody>
+		{{range .Data}}
+		<tr>
+			<th>(Ch{{.Channel}}){{.Height}}m</th>
+			{{range .Data}}<th>{{printf "%0.2f" .}}</th>{{end}}
+			<th>{{printf "%0.2f" .Avg}}</th>
+		</tr>
+		{{end}}
+	</tbody>
+</table>
+{{end}}
+</div>
+
+	</div>
+
+	<div class="modal-footer">
+		<div class="message"></div>
+	</div>
+</div><!-- /Wvp-Fig -->
+
+<script>
+$(document).ready(function(){
+	{{range $i,$v:= .wvps}}
+		var v{{$i}} = {{toJson $v}};
+
+		showWvpFig({{$i}},v{{$i}});
+	{{end}}
+});
+
+function showWvpFig(id,wvp) {
+	var data = [];
+	for (var i=0;i<wvp.Data.length;i++) {
+		var d = {
+			"name": wvp.Data[i].Name,
+			"data": wvp.Data[i].Data
+		}
+		data.push(d)
+	}
+	console.log(wvp.Data);
+	console.log(data);
+	$('#chart_wvp_'+id).highcharts({
+		chart: {
+			type: 'line',
+			marginRight: 130,
+			marginBottom: 25
+		},
+		title: {
+			text: wvp.Title+"变化图",
+			x: -20 //center
+		},
+		subtitle: {
+			text: wvp.Subtitle,
+			x: -20
+		},
+		xAxis: {
+			categories: wvp.Cats
+		},
+		yAxis: {
+			title: {
+				text: wvp.YaxisTitle
+			},
+			plotLines: [{
+				value: 0,
+				width: 1,
+				color: '#808080'
+			}]
+		},
+		tooltip: {
+			valueSuffix: wvp.ValueSuffix
+		},
+		legend: {
+			layout: 'vertical',
+			align: 'right',
+			verticalAlign: 'top',
+			x: -10,
+			y: 100,
+			borderWidth: 0
+		},
+		series: data
+	});
+}
+
+</script>
+
+
+{{end}}

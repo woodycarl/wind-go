@@ -1,0 +1,12 @@
+{
+	"Port":	"8888",
+
+	"Config": {
+		"AllowMinMax": false,
+		"RlostMethod": "avg",
+		"CalMethod": "fuse",
+		"CalHeight": 80,
+		"AirDensity": 1.18
+	}
+
+}

@@ -1,0 +1,106 @@
+{{define "content"}}
+<!-- 数据完整率 -->
+<div class="dig">
+	<div class="modal-header">
+		<h3>数据完整率</h3>
+	</div>
+
+	<div class="modal-body">
+
+<table class="table table-condensed">
+	<thead>
+		<tr>
+			<th rowspan="2" colspan="2">&nbsp;</th>
+			{{range .years}}
+			<th colspan="{{.Num}}">{{.Year}}年</th>
+			{{end}}
+		</tr>
+		<tr>
+			{{range .am}}
+		<th>{{.Month}}月</th>
+			{{end}}
+		</tr>
+	</thead>
+
+	<tbody>
+		<tr>
+			<td>缺失数据</td>
+			<td>Lost</td>
+			{{range .am}}
+			<td>{{.Lost}}</td>
+			{{end}}
+		</tr>
+
+		<tr>
+			<td rowspan="2">合理性</td>
+			<td>R<sub>wv</sub></td>
+			{{range .am}}
+			<td>{{.Rwv}}</td>
+			{{end}}
+		</tr>
+		<tr>
+			<td>R<sub>wd</sub></td>
+			{{range .am}}
+			<td>{{.Rwd}}</td>
+			{{end}}
+		</tr>
+
+
+		<tr>
+			<td rowspan="3">趋势性</td>
+			<td>T<sub>wv</sub></td>
+			{{range .am}}
+			<td>{{.Twv}}</td>
+			{{end}}
+		</tr>
+		<tr>
+			<td>T<sub>t</sub></td>
+			{{range .am}}
+			<td>{{.Tt}}</td>
+			{{end}}
+		</tr>
+		<tr>
+			<td>T<sub>p</sub></td>
+			{{range .am}}
+			<td>{{.Tp}}</td>
+			{{end}}
+		</tr>
+
+		<tr>
+			<td rowspan="2">相关性</td>
+			<td>C<sub>wv</sub></td>
+			{{range .am}}
+			<td>{{.Cwv}}</td>
+			{{end}}
+		</tr>
+		<tr>
+			<td>C<sub>wd</sub></td>
+			{{range .am}}
+			<td>{{.Cwd}}</td>
+			{{end}}
+		</tr>
+
+	</tbody>
+	<tfoot>
+		<tr>
+			<td colspan="2">Sum</td>
+			{{range .am}}
+			<td>{{.All}}</td>
+			{{end}}
+		</tr>
+		<tr>
+			<td colspan="2">Sr</td>
+			{{range .am}}
+			<td>{{printf "%0.2f" .Sr}}</td>
+			{{end}}
+		</tr>
+	</tfoot>
+</table>
+
+	</div>
+
+	<div class="modal-footer">
+		<div class="message"></div>
+	</div>
+</div><!-- /数据完整率 -->
+{{end}}

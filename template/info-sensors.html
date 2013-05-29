@@ -1,0 +1,33 @@
+{{define "content"}}
+<!-- Sensors -->
+<div class="dig">
+	<div class="modal-header">
+		<h3>Sensors信息</h3>
+	</div>
+
+	<div class="modal-body">
+
+<table class="table table-condensed table-hover">
+	<caption>文件系统 {{.system}} {{.version}}</caption>
+	<thead>
+		<tr>
+			<th>通道</th>
+			<th>描述</th>
+			<th>高度</th>
+			<th>单位</th>
+		</tr>
+	</thead>
+	<tbody>
+{{range .sensors}}
+<tr><td>{{.Channel}}</td><td>{{.Description}}</td><td>{{.Height}}</td><td>{{.Units}}</td></tr>
+{{end}}
+	</tbody>
+</table>
+
+	</div>
+
+	<div class="modal-footer">
+		<div class="message"></div>
+	</div>
+</div><!-- /Sensors -->
+{{end}}

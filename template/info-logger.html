@@ -1,0 +1,24 @@
+{{define "content"}}
+<!-- Logger -->
+<div class="dig">
+	<div class="modal-header">
+		<h3>设备信息</h3>
+	</div>
+
+	<div class="modal-body">
+
+<table class="table table-condensed">
+	<tbody>
+	<tr><th>Model</th><td>{{.logger.Model}}</td></tr>
+	<tr><th>Serial</th><td>{{.logger.Serial}}</td></tr>
+	<tr><th>Hardware Rev.</th><td>{{.logger.HardwareRev}}</td></tr>
+	</tbody>
+</table>
+
+	</div>
+
+	<div class="modal-footer">
+		<div class="message"></div>
+	</div>
+</div><!-- /Logger -->
+{{end}}

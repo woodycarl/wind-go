@@ -1,0 +1,36 @@
+package handle
+
+import (
+	"net/http"
+	"github.com/gorilla/mux"
+)
+
+type TurbData struct {
+	Channel string
+	Height int
+	Turb float64
+}
+func handleTurbs(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+
+	data := getData(id)
+	s := data.Station
+
+	var turbs []TurbData
+
+	for i,v := range s.Sensors["wv"] {
+		turb := TurbData {
+			Channel: v.Channel,
+			Height: v.Height,
+			Turb: s.Turbs[i],
+		}
+		turbs = append(turbs, turb)
+	}
+
+	page := Page {
+		"id": id,
+		"turbs": turbs,
+	}
+
+	page.render("turbs", w)
+}

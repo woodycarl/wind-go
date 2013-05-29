@@ -1,0 +1,147 @@
+{{define "content"}}
+<!-- Wvp-windrose-Fig -->
+<div class="dig">
+	<div class="modal-header">
+		<h3></h3>
+	</div>
+
+	<div class="modal-body">
+
+<div id="chart_wvp_windrose">
+{{range $i,$v:= .wvps}}
+<div id="chart_wvp_windrose_{{$i}}"></div>
+
+<!-- Source: http://or.water.usgs.gov/cgi-bin/grapher/graph_windrose.pl -->
+<table id="data-{{$i}}" class="table table-condensed">
+	<caption>{{.Title}}</caption>
+	
+	<tr>
+		<th class="freq">方向</th>
+		{{range .Cats}}
+		<th class="freq">{{.}}</th>
+		{{end}}
+		<th class="freq">总计</th>
+	</tr>
+	{{range .Data}}
+	<tr>
+		<td class="dir">{{.Dir}}</td>
+		{{range .Data}}
+		<td class="data">{{printf "%0.5f" .}}</td>
+		{{end}}
+		<td class="data">{{printf "%0.5f" .Sum}}</td>
+	</tr>
+	{{end}}
+	<tr>
+		<td class="totals">总计</td>
+		{{range .Sums}}
+		<td class="totals">{{printf "%0.5f" .}}</td>
+		{{end}}
+		<td class="totals">&nbsp;</td>
+	</tr>
+</table>
+
+
+{{end}}
+</div>
+
+	</div>
+
+	<div class="modal-footer">
+		<div class="message"></div>
+	</div>
+</div><!-- /Wvp-windrose-Fig -->
+
+<script>
+$(document).ready(function(){
+	{{range $i,$v:= .wvps}}
+		var v{{$i}} = {{toJson $v}};
+
+		showWvpFig({{$i}},v{{$i}});
+	{{end}}
+});
+
+function showWvpFig(id,wvp) {
+	// Parse the data from an inline table using the Highcharts Data plugin
+	$('#chart_wvp_windrose_'+id).highcharts({
+		data: {
+			table: 'data-'+id,
+			startRow: 0,
+			endRow: wvp.Data.length,
+			endColumn: wvp.Cats.length
+		},
+
+		chart: {
+			polar: true,
+			type: 'column'
+		},
+
+		title: {
+			text: wvp.Title
+		},
+
+		subtitle: {
+			text: ''
+		},
+
+		colors: [
+        '#11264f',
+        '#145b7d',
+        '#009ad6',
+        '#00ae9d',
+        '#dec674',
+        '#ffc20e',
+        '#ef4136',
+        '#ed1941',
+        '#892f1b'
+    ],
+
+		pane: {
+			size: '85%'
+		},
+
+		legend: {
+			reversed: true,
+			align: 'right',
+			verticalAlign: 'top',
+			y: 100,
+			layout: 'vertical'
+		},
+
+		xAxis: {
+			tickmarkPlacement: 'on'
+		},
+
+		yAxis: {
+			min: 0,
+			endOnTick: false,
+			showLastLabel: true,
+			title: {
+				text: '频率 (%)'
+			},
+			labels: {
+				formatter: function () {
+					return this.value + '%';
+				}
+			}
+		},
+
+		tooltip: {
+			valueSuffix: '%',
+			followPointer: true
+		},
+
+		plotOptions: {
+			series: {
+				stacking: 'normal',
+				shadow: false,
+				groupPadding: 0,
+				pointPlacement: 'on'
+			}
+		}
+	});
+}
+
+</script>
+
+
+{{end}}

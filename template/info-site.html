@@ -1,0 +1,29 @@
+{{define "content"}}
+<!-- Site -->
+<div class="dig">
+	<div class="modal-header">
+		<h3>Site信息</h3>
+	</div>
+
+	<div class="modal-body">
+
+<table class="table table-condensed">
+	<tbody>
+	<tr><th>编号</th><td>{{.site.Site}}</td></tr>
+	<tr><th>说明</th><td>{{.site.SiteDesc}}</td></tr>
+	<tr><th>项目代码</th><td>{{.site.ProjectCode}}</td></tr>
+	<tr><th>项目说明</th><td>{{.site.ProjectDesc}}</td></tr>
+	<tr><th>海拔高度</th><td>{{.site.SiteElevation}}</td></tr>
+	<tr><th>经度</th><td>{{.site.Longitude}}</td></tr>
+	<tr><th>纬度</th><td>{{.site.Latitude}}</td></tr>
+	<tr><th>时区</th><td>{{.site.TimeOffset}}</td></tr>
+	</tbody>
+</table>
+
+	</div>
+
+	<div class="modal-footer">
+		<div class="message"></div>
+	</div>
+</div><!-- /Site -->
+{{end}}

@@ -1,0 +1,99 @@
+{{define "content"}}
+<!-- Linest-Fig -->
+<div class="dig">
+	<div class="modal-header">
+		<h3>{{.title}}</h3>
+	</div>
+
+	<div class="modal-body">
+
+<div id="chart_rsq">
+{{range .linests}}
+	<div id="chart_rsq_{{.Ch1}}_{{.Ch2}}"></div>
+{{end}}
+</div>
+
+	</div>
+
+	<div class="modal-footer">
+		<div class="message"></div>
+	</div>
+</div><!-- /Linest-Fig -->
+
+<script>
+$(document).ready(function(){
+	{{range .linests}}
+		var data_{{.Ch2}} = {{.Data}};
+		showLinestFig({{.Ch1}},{{.Ch2}},{{.Height1}},{{.Height2}},data_{{.Ch2}},{{.Max2}},{{printf "%0.3f" .Slope}},{{printf "+%0.3f" .Intercept}},{{printf "%0.3f" .Rsq}});
+	{{end}}
+});
+
+function showLinestFig(ch1, ch2 ,height1, height2, data, max, slope, intercept, rsq) {
+	$('#chart_rsq_'+ch1+'_'+ch2).highcharts({
+		chart: {
+		},
+		plotOptions: {
+			series: {
+				enableMouseTracking: false
+			},
+			line: {
+				lineWidth: 2
+			}
+		},
+		xAxis: {
+			min: -0.5,
+			max: (max+0.5),
+      title: {
+				text: '通道'+ch2+' (m/s)',
+				style: {
+					color: 'black'
+				}
+			}
+		},
+		yAxis: {
+			min: 0,
+      title: {
+				text: '通道'+ch1+' (m/s)',
+				style: {
+					color: 'black'
+				}
+			}
+		},
+		title: {
+			text: '通道'+ch1+'('+height1+'m)、通道'+ch2+'('+height2+'m)的相关性'
+		},
+		subtitle: {
+			text: 'y='+slope+'x '+intercept+' R<sup>2</sup>='+rsq
+		},
+		series: [{
+			type: 'scatter',
+			name: '数据点',
+			color: 'rgba(0, 0, 0, 1)',
+			data: data,
+			marker: {
+				radius: 2
+			}
+		},{
+			type: 'line',
+			name: '线性相关',
+			data: [[0, intercept], [max+0.5, (max+0.5)*slope+intercept]],
+			marker: {
+				enabled: false
+			},
+
+			states: {
+				hover: {
+					lineWidth: 0
+				}
+			},
+			enableMouseTracking: false
+		} ]
+	});
+}
+
+
+
+</script>
+
+
+{{end}}

@@ -1,0 +1,80 @@
+{{define "content"}}
+<!-- Wvp-Freq -->
+<div class="dig">
+	<div class="modal-header">
+		<h3>风速风功率密度分布</h3>
+	</div>
+
+	<div class="modal-body">
+
+	{{range $i,$v := .wvps}}
+	<div id="wvp_{{$i}}"></div>
+	{{end}}
+
+
+	</div>
+
+	<div class="modal-footer">
+		<div class="message"></div>
+	</div>
+</div><!-- /Wvp-Freq -->
+
+<script>
+$(document).ready(function(){
+
+	{{range $i,$v := .wvps}}
+	var v{{$i}} = {{toJson $v}};
+	showFig({{$i}}, v{{$i}})
+	{{end}}
+
+});
+
+function showFig(id,wvp) {
+	$('#wvp_'+id).highcharts({
+		chart: {
+			type: 'column'
+		},
+		title: {
+			text: wvp.Title
+		},
+		subtitle: {
+			text: ''
+		},
+		xAxis: {
+			categories: wvp.Cats
+		},
+		yAxis: {
+			min: 0,
+			title: {
+				text: '频率 (%)'
+			}
+		},
+		colors: ["#0066FF","#009933"],
+		tooltip: {
+			headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+			pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+			'<td style="padding:0"><b>{point.y:.1f} %</b></td></tr>',
+			footerFormat: '</table>',
+			shared: true,
+			useHTML: true
+		},
+		plotOptions: {
+			column: {
+				pointPadding: 0.2,
+				borderWidth: 0
+			}
+		},
+		series: [{
+			name: '风速',
+			data: wvp.Vf
+		}, {
+			name: '风能',
+			data: wvp.Pf
+
+		}]
+	});
+}
+
+</script>
+
+{{end}}

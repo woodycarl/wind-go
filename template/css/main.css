@@ -1,0 +1,77 @@
+body {
+	padding-top: 60px; 
+}
+
+
+
+.dig {
+	min-width: 500px;
+	max-width: 900px;
+	padding: 5px 0px 0px;
+	margin: 0 auto 20px;
+	background-color: #fff;
+	border: 1px solid #e5e5e5;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	-webkit-box-shadow: 0 1px 2px rgba(0,0,0,.05);
+	-moz-box-shadow: 0 1px 2px rgba(0,0,0,.05);
+	box-shadow: 0 1px 2px rgba(0,0,0,.05);
+}
+.dig .modal-body {
+	min-height: 200px;
+	max-height: 600000px;
+}
+.dig .modal-footer .message .alert {
+	float: left;
+	padding: 4px 8px;
+	margin:0px;
+}
+
+
+#data_revise .dig .modal-body {
+	min-height: 600px;
+}
+
+
+
+
+#chart_rsq>div {
+	width: 95%;
+}
+
+
+/*
+ * jQuery File Upload UI Plugin CSS 6.10
+ * https://github.com/blueimp/jQuery-File-Upload
+ *
+ * Copyright 2010, Sebastian Tschan
+ * https://blueimp.net
+ *
+ * Licensed under the MIT license:
+ * http://www.opensource.org/licenses/MIT
+ */
+.fileinput-button {
+	position: relative;
+}
+.fileinput-button input {
+	position: absolute;
+	top: 0;
+	right: 0;
+	margin: 0;
+	opacity: 0;
+	filter: alpha(opacity=0);
+	transform: translate(-300px, 0) scale(4);
+	cursor: pointer;
+	width: 100%;
+}
+.fileinput-button-group {
+	margin-bottom: 20px;
+}
+
+
+.rickshaw_graph svg {
+	position: absolute;
+	left: 0;
+	top: 0;
+}

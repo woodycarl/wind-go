@@ -1,0 +1,84 @@
+{{define "content"}}
+<!-- Windshear -->
+<div class="dig">
+	<div class="modal-header">
+		<h3>各高度范围的风切变指数</h3>
+	</div>
+
+	<div class="modal-body">
+
+<div id="windshear"></div>
+
+<table class="table table-condensed">
+	<thead>
+		<tr>
+			<th>切变高度</th><th>切变值</th>
+		</tr>
+	</thead>
+	<tbody>
+		{{range .windshear.Data}}
+		<tr>
+			<th>Ch{{.XCh}}-Ch{{.YCh}}({{.XH}}m-{{.YH}}m)</th><th>{{printf "%0.3f" .Ws}}</th>
+		</tr>
+		{{end}}
+	</tbody>
+</table>
+
+	</div>
+
+	<div class="modal-footer">
+		<div class="message"></div>
+	</div>
+</div><!-- /Windshear -->
+
+<script>
+$(document).ready(function(){
+
+	var points = {{toJson .windshear.Points}};
+	var line = {{toJson .windshear.Line}};
+
+	showWindshearFig("windshear", points, line);
+
+});
+
+function showWindshearFig(id,points,line) {
+	$('#'+id).highcharts({
+		chart: {
+		},
+		xAxis: {
+			min: -0.5,
+			max: 85.5
+		},
+		yAxis: {
+			min: 0
+		},
+		title: {
+		text: '风切变'
+		},
+		series: [{
+			type: 'spline',
+			name: '拟合曲线',
+			data: line,
+			marker: {
+				enabled: false
+			},
+			states: {
+				hover: {
+					lineWidth: 0
+				}
+			},
+			enableMouseTracking: false
+		}, {
+			type: 'scatter',
+			name: '数据点',
+			data: points,
+			marker: {
+				radius: 4
+			}
+		}]
+	});
+}
+
+</script>
+
+{{end}}

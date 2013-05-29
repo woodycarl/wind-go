@@ -1,0 +1,114 @@
+{{define "content"}}
+<!-- Wvp-Fre-Fig -->
+<div class="dig">
+	<div class="modal-header">
+		<h3>各高度代表年风速和风能频率分布直方图</h3>
+	</div>
+
+	<div class="modal-body">
+
+<div id="chart_wvp">
+{{range $i,$v:= .wvps}}
+<div id="chart_wvp_{{$i}}"></div>
+
+<table class="table table-condensed">
+	<caption>{{.Title}}</caption>
+	<thead>
+		<tr>
+			<th>时间({{.Unit}})</th>
+			{{range .Cats}}<th>{{.}}</th>{{end}}<th>平均</th>
+		</tr>
+	</thead>
+	<tbody>
+		{{range .Data}}
+		<tr>
+			<th>(Ch{{.Channel}}){{.Height}}m</th>
+			{{range .Data}}<th>{{printf "%0.2f" .}}</th>{{end}}
+			<th>{{printf "%0.2f" .Avg}}</th>
+		</tr>
+		{{end}}
+	</tbody>
+</table>
+{{end}}
+</div>
+
+	</div>
+
+	<div class="modal-footer">
+		<div class="message"></div>
+	</div>
+</div><!-- /Wvp-Fre-Fig -->
+
+<script>
+$(document).ready(function(){
+	{{range $i,$v:= .wvps}}
+		var v{{$i}} = {{toJson $v}};
+
+		showWvpFig({{$i}},v{{$i}});
+	{{end}}
+});
+
+function showWvpFig(id,wvp) {
+	$('#chart_wvp_'+id).highcharts({
+		chart: {
+			zoomType: 'xy'
+		},
+		title: {
+			text: 'Ch'+wvp.Channel+'('+wvp.Height+'m)风速和风能频率分布直方图'
+		},
+		subtitle: {
+			text: ''
+		},
+		xAxis: [{
+			categories: wvp.Cats
+		}],
+		yAxis: [{ // Primary yAxis
+			labels: {
+				format: '{value}%',
+				style: {
+					color: '#89A54E'
+				}
+			},
+			title: {
+				text: '频率',
+				style: {
+					color: '#89A54E'
+				}
+			}
+		}],
+		tooltip: {
+			shared: true
+		},
+		legend: {
+			layout: 'vertical',
+			align: 'left',
+			x: 120,
+			verticalAlign: 'top',
+			y: 100,
+			floating: true,
+			backgroundColor: '#FFFFFF'
+		},
+		series: [{
+			name: '风速',
+			color: '#4572A7',
+			type: 'column',
+			data: [49.9, 71.5, 106.4, 129.2, 144.0, 176.0, 135.6, 148.5, 216.4, 194.1, 95.6, 54.4],
+			tooltip: {
+			valueSuffix: '%'
+			}
+		}, {
+			name: '风能',
+			color: '#89A54E',
+			type: 'column',
+			data: [7.0, 6.9, 9.5, 14.5, 18.2, 21.5, 25.2, 26.5, 23.3, 18.3, 13.9, 9.6],
+			tooltip: {
+			valueSuffix: '%'
+			}
+		}]
+		});
+}
+
+</script>
+
+
+{{end}}
