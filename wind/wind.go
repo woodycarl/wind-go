@@ -2,6 +2,8 @@ package wind
 
 import (
 	"time"
+
+	. "github.com/woodycarl/wind-go/logger"
 )
 
 func HandleData(data [][]string, c Config) (r []Result, err error) {

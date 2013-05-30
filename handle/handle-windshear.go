@@ -1,10 +1,10 @@
 package handle
 
 import (
-	"github.com/gorilla/mux"
 	"math"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/woodycarl/wind-go/wind"
 )
 
@@ -20,7 +20,10 @@ type WindshearData struct {
 func handleWindshear(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
-	data := getData(id)
+	data, err := getData(id)
+	if err != nil {
+		handleErr(w, err)
+	}
 	s := data.Station
 
 	var points [][]float64

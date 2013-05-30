@@ -4,6 +4,8 @@ import (
 	"math"
 	"strconv"
 	"time"
+
+	. "github.com/woodycarl/wind-go/logger"
 )
 
 func caculates(r []Result, c Config) []Result {
@@ -60,7 +62,6 @@ func caculate(s Station, d1, d2, rd []Data, c Config) Station {
 	}
 
 	s.DataTime = db.get("Time")["Time"]
-	Info("wv", len(s.DataWv), "wp", len(s.DataWd), "time", len(s.DataTime))
 
 	s.Wss = <-chWss
 
@@ -119,11 +120,13 @@ func calAvgWvp(s Station, db DB, chWvp chan []map[string]Mwvp) {
 			for k := 0; k < 24; k++ {
 				ks := strconv.Itoa(k)
 				dataMH := dbMs[m].filter("Hour", float64(k)).get(ch)[ch]
+
 				chwvpM.Hwv[ks] = ArrayAvg(dataMH)
 				chwvpM.Hwp[ks] = s.AirDensity * ArrayAvg(ArrayPow(dataMH, 3.0)) / 2.0
 
 				chwvp0.Hwv[ks] = chwvp0.Hwv[ks] + chwvpM.Hwv[ks]
 				chwvp0.Hwp[ks] = chwvp0.Hwp[ks] + chwvpM.Hwp[ks]
+
 			}
 
 			chwvp[m] = chwvpM

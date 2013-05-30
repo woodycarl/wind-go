@@ -2,6 +2,7 @@ package handle
 
 import (
 	"net/http"
+
 	"github.com/gorilla/mux"
 )
 
@@ -9,10 +10,13 @@ func handleInfo(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	cat := mux.Vars(r)["cat"]
 
-	data := getData(id)
+	data, err := getData(id)
+	if err != nil {
+		handleErr(w, err)
+	}
 	s := data.Station
 
-	page := Page {
+	page := Page{
 		"id": id,
 	}
 
@@ -32,14 +36,14 @@ func handleInfo(w http.ResponseWriter, r *http.Request) {
 	case "integrity-all":
 		type Years struct {
 			Year float64
-			Num int
+			Num  int
 		}
 		years := map[int]Years{}
 
 		for _, v := range s.Am {
 			years[int(v.Year)] = Years{
 				Year: v.Year,
-				Num: years[int(v.Year)].Num+1,
+				Num:  years[int(v.Year)].Num + 1,
 			}
 		}
 		page["years"] = years

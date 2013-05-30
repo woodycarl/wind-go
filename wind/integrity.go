@@ -3,6 +3,8 @@ package wind
 import (
 	"math"
 	"time"
+
+	. "github.com/woodycarl/wind-go/logger"
 )
 
 func integrities(r []Result, c Config) []Result {

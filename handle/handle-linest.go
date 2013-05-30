@@ -3,9 +3,9 @@ package handle
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/woodycarl/wind-go/wind"
 )
 
@@ -13,7 +13,10 @@ func handleLinest(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	cat := mux.Vars(r)["cat"]
 
-	data := getData(id)
+	data, err := getData(id)
+	if err != nil {
+		handleErr(w, err)
+	}
 	s := data.Station
 
 	var title string
@@ -50,7 +53,10 @@ func handleLinestFig(w http.ResponseWriter, r *http.Request) {
 	cat := mux.Vars(r)["cat"]
 	ch1 := mux.Vars(r)["ch"]
 
-	data := getData(id)
+	data, err := getData(id)
+	if err != nil {
+		handleErr(w, err)
+	}
 	s := data.Station
 
 	var sensor wind.Sensor

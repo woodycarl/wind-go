@@ -1,9 +1,10 @@
 package handle
 
 import (
-	"github.com/gorilla/mux"
 	"net/http"
 	"runtime"
+
+	"github.com/gorilla/mux"
 )
 
 func init() {
@@ -32,13 +33,9 @@ func Main() {
 	r.HandleFunc("/result/{id}/wvp/mh", handleWvpMhFig)
 
 	r.HandleFunc("/result/{id}/turbs", handleTurbs)
-
 	r.HandleFunc("/result/{id}/windshear", handleWindshear)
-
 	r.HandleFunc("/result/{id}/windrose", handleWdvpWindRose)
-
 	r.HandleFunc("/result/{id}/wvp-freq", handleWvpFreq)
-
 	//r.HandleFunc("/result/{id}/turbine/wvp", handleTurbineWvp)
 
 	http.Handle("/", r)

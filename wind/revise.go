@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"strconv"
 	"time"
+
+	. "github.com/woodycarl/wind-go/logger"
 )
 
 func revises(r []Result, c Config) []Result {

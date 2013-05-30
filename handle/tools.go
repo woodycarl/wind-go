@@ -1,7 +1,6 @@
 package handle
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -41,10 +40,9 @@ func writeLines(lines []string, path string) (err error) {
 	defer file.Close()
 
 	for _, item := range lines {
-		_, err := file.WriteString(strings.TrimSpace(item) + "\r\n")
+		_, err = file.WriteString(strings.TrimSpace(item) + "\r\n")
 		if err != nil {
-			fmt.Println(err)
-			break
+			return
 		}
 	}
 
