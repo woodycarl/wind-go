@@ -3,6 +3,7 @@ package wind
 import (
 	"errors"
 	"math"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -104,7 +105,7 @@ func DecodeData(lines []string, c Config, ch chan RawData) {
 	var data []Data
 
 	if len(lines) < 100 {
-		chData.err = errors.New("not enough data")
+		chData.err = errors.New("DecodeData: not enough data")
 		ch <- chData
 		return
 	}
@@ -117,10 +118,14 @@ func DecodeData(lines []string, c Config, ch chan RawData) {
 
 	switch s.System {
 	case "SDR":
-		s.SensorsR, s.Logger, s.Site, linesR = decInfoSDR(lines)
-		data = decDataSDRch(linesR, c.AllowMinMax)
+		s.SensorsR, s.Logger, s.Site, linesR, chData.err = decInfoSDR(lines)
+		if chData.err != nil {
+			ch <- chData
+			return
+		}
+		data = decDataSDRch(linesR, s.SensorsR)
 	default:
-		chData.err = errors.New("system not surport!")
+		chData.err = errors.New("DecodeData: system not surport!")
 		ch <- chData
 		return
 	}
@@ -138,21 +143,38 @@ func DecodeData(lines []string, c Config, ch chan RawData) {
 	ch <- chData
 }
 
-func decInfoSDR(lines []string) (sensors []Sensor, logger Logger, site Site, linesR []string) {
+func decInfoSDR(lines []string) (sensors []Sensor, logger Logger, site Site, linesR []string, err error) {
 	//Info("dec info")
 	for i := 0; i < len(lines); i++ {
 		if strings.Contains(lines[i], "Channel") {
 			sensor := Sensor{
 				Channel:      getLineStr(lines[i]),
-				Type:         getLineInt(lines[i+1]),
+				Type:         getLineStr(lines[i+1]),
 				Description:  getLineStr(lines[i+2]),
 				Details:      getLineStr(lines[i+3]),
 				SerialNumber: getLineStr(lines[i+4]),
-				Height:       parseInt(strings.Split(getLineStr(lines[i+5]), " ")[0]),
-				ScaleFactor:  getLineFloat(lines[i+6]),
-				Offset:       getLineFloat(lines[i+7]),
+				ScaleFactor:  getLineStr(lines[i+6]),
+				Offset:       getLineStr(lines[i+7]),
 				Units:        getLineStr(lines[i+8]),
 			}
+			if len(sensor.Channel) < 1 {
+				err = errors.New("sensor channel empty!")
+				return
+			}
+
+			if len(sensor.Units) < 1 {
+				err = errors.New("sensor units empty!")
+				return
+			}
+
+			sensor.Height, err = strconv.Atoi(strings.Fields(getLineStr(lines[i+5]))[0])
+			if err != nil && sensor.Description != "No SCM Installed" && getLineStr(lines[i+5]) != "m" {
+				// 需要增加没有高度值时的处理
+				Error("decInfoSDR: sensor height get err!", err)
+				return
+			}
+			err = nil
+
 			sensors = append(sensors, sensor)
 			i = i + 8
 			continue
@@ -168,16 +190,24 @@ func decInfoSDR(lines []string) (sensors []Sensor, logger Logger, site Site, lin
 		}
 		if strings.Contains(lines[i], "Site") {
 			site = Site{
-				Site:          getLineStr(lines[i+1]),
-				SiteDesc:      getLineStr(lines[i+2]),
-				ProjectCode:   getLineStr(lines[i+3]),
-				ProjectDesc:   getLineStr(lines[i+4]),
-				SiteLocation:  getLineStr(lines[i+5]),
-				SiteElevation: getLineFloat(lines[i+6]),
-				Latitude:      getLineStr(lines[i+7]),
-				Longitude:     getLineStr(lines[i+8]),
-				TimeOffset:    getLineFloat(lines[i+9]),
+				Site:         getLineStr(lines[i+1]),
+				SiteDesc:     getLineStr(lines[i+2]),
+				ProjectCode:  getLineStr(lines[i+3]),
+				ProjectDesc:  getLineStr(lines[i+4]),
+				SiteLocation: getLineStr(lines[i+5]),
+				Latitude:     getLineStr(lines[i+7]),
+				Longitude:    getLineStr(lines[i+8]),
+				TimeOffset:   getLineStr(lines[i+9]),
 			}
+
+			site.SiteElevation, err = strconv.ParseFloat(getLineStr(lines[i+6]), 64)
+			if err != nil && getLineStr(lines[i+6]) != "" {
+				// 需要增加为 "" 时的处理
+				Error("decInfoSDR: site elevation get err!", err)
+				return
+			}
+			err = nil
+
 			i = i + 9
 			continue
 		}
@@ -191,10 +221,11 @@ func decInfoSDR(lines []string) (sensors []Sensor, logger Logger, site Site, lin
 
 type ChDecData struct {
 	index int
+	err   error
 	data  []Data
 }
 
-func decDataSDRch(lines []string, allowMinMax bool) (r []Data) {
+func decDataSDRch(lines []string, s []Sensor) (r []Data) {
 	//Info("dec data")
 	interval := 15000
 	length := int(math.Ceil(float64(len(lines)) / float64(interval)))
@@ -202,9 +233,9 @@ func decDataSDRch(lines []string, allowMinMax bool) (r []Data) {
 	ch := make(chan ChDecData, length)
 	for i := 0; i < length-1; i++ {
 		start := i * interval
-		go decDataSDR(lines[start:start+interval], allowMinMax, i, ch)
+		go decDataSDR(lines[start:start+interval], s, i, ch)
 	}
-	go decDataSDR(lines[(length-1)*interval:], allowMinMax, length-1, ch)
+	go decDataSDR(lines[(length-1)*interval:], s, length-1, ch)
 
 	chData := map[int][]Data{}
 	for i := 0; i < length; i++ {
@@ -217,8 +248,13 @@ func decDataSDRch(lines []string, allowMinMax bool) (r []Data) {
 
 	return
 }
-func decDataSDR(lines []string, allowMinMax bool, index int, ch chan ChDecData) {
+func decDataSDR(lines []string, s []Sensor, index int, ch chan ChDecData) {
+	chDecData := ChDecData{
+		index: index,
+	}
+
 	var r []Data
+
 	for i := 0; i < len(lines); i++ {
 		data := strings.Split(lines[i], "\t")
 
@@ -227,14 +263,14 @@ func decDataSDR(lines []string, allowMinMax bool, index int, ch chan ChDecData) 
 			continue
 		}
 
-		td := strings.Split(data[0], " ")
 		var t time.Time
 		var my float64
-		switch len(td) {
-		case 2:
-			t, my = decodeDate(td[0], td[1])
-		case 3:
-			t, my = decodeDate(td[0], td[2])
+
+		t, my, chDecData.err = decodeDate(data[0])
+		if chDecData.err != nil {
+			Error("decodeDate", chDecData.err)
+			ch <- chDecData
+			return
 		}
 
 		tData := Data{
@@ -245,54 +281,97 @@ func decDataSDR(lines []string, allowMinMax bool, index int, ch chan ChDecData) 
 			"Month": float64(t.Month()),
 		}
 
-		for j := 1; j <= len(data)/4; j++ {
-			// if Description=="No SCM Installed" {continue}
-			var start = (j-1)*4 + 1
-			sj := strconv.Itoa(j)
-			tData["ChAvg"+sj] = parseFloat(data[start])
-			tData["ChSd"+sj] = parseFloat(data[start+1])
-			if allowMinMax {
-				tData["ChMax"+sj] = parseFloat(data[start+2])
-				tData["ChMin"+sj] = parseFloat(data[start+3])
+		for j, v := range s {
+			if v.Description == "No SCM Installed" {
+				continue
 			}
 
+			start := j*4 + 1
+			js := v.Channel
+
+			tData["ChAvg"+js], chDecData.err = strconv.ParseFloat(data[start], 64)
+			if chDecData.err != nil {
+				Error("decDataSDR: ChAvg"+js, chDecData.err)
+				ch <- chDecData
+				return
+			}
+
+			tData["ChSd"+js], chDecData.err = strconv.ParseFloat(data[start+1], 64)
+			if chDecData.err != nil {
+				Error("decDataSDR: ChSd"+js, chDecData.err)
+				ch <- chDecData
+				return
+			}
+			/*
+				tData["ChMax"+js], chDecData.err = strconv.ParseFloat(data[start+2], 64)
+				if chDecData.err != nil {
+					Error("decDataSDR: ChMax"+js, chDecData.err)
+					ch <- chDecData
+					return
+				}
+
+				tData["ChMin"+js], chDecData.err = strconv.ParseFloat(data[start+4], 64)
+				if chDecData.err != nil {
+					Error("decDataSDR: ChMin"+js, chDecData.err)
+					ch <- chDecData
+					return
+				}*/
 		}
 
 		r = append(r, tData)
 	}
 
-	chDecData := ChDecData{
-		index: index,
-		data:  r,
-	}
+	chDecData.data = r
 	ch <- chDecData
 }
 
 func getLineStr(str string) string {
 	return strings.Split(str, "\t")[1]
 }
-func getLineInt(str string) int {
-	return parseInt(getLineStr(str))
-}
-func getLineFloat(str string) float64 {
-	return parseFloat(getLineStr(str))
-}
-func parseInt(str string) int {
-	r, _ := strconv.Atoi(str)
-	return r
-}
-func parseFloat(str string) float64 {
-	r, _ := strconv.ParseFloat(str, 64)
-	return r
-}
 
-func decodeDate(str1, str2 string) (time.Time, float64) {
-	a := strings.Split(str1, "/")
-	b := strings.Split(str2, ":")
+func decodeDate(data string) (t time.Time, f float64, err error) {
+	re := regexp.MustCompile(`^(\d{4})\/(\d{1,2})\/(\d{1,2})(\s\w+|)\s(\d{1,2}):(\d{1,2})(:\d{1,2}|)$`)
+	if !re.MatchString(data) {
+		err = errors.New("date format err")
+		return
+	}
+
+	td := re.FindStringSubmatch(data)
+
+	var year, month, date, hour, minute int
+	year, err = strconv.Atoi(td[1])
+	if err != nil {
+		return
+	}
+
+	month, err = strconv.Atoi(td[2])
+	if err != nil {
+		return
+	}
+
+	date, err = strconv.Atoi(td[3])
+	if err != nil {
+		return
+	}
+
+	hour, err = strconv.Atoi(td[5])
+	if err != nil {
+		return
+	}
+
+	minute, err = strconv.Atoi(td[6])
+	if err != nil {
+		return
+	}
 
 	location, _ := time.LoadLocation("Local")
-	t := time.Date(parseInt(a[0]), time.Month(parseInt(a[1])), parseInt(a[2]), parseInt(b[0]), parseInt(b[1]), 0, 0, location)
-	return t, parseFloat(a[0] + a[1])
+	t = time.Date(year, time.Month(month), date, hour, minute, 0, 0, location)
+
+	f, err = strconv.ParseFloat(td[1]+td[2], 64)
+	if err != nil {
+		return
+	}
+	return
 }
 
 func sensorClassify(sensorsR []Sensor) map[string]([]Sensor) {
@@ -315,7 +394,7 @@ func sensorClassify(sensorsR []Sensor) map[string]([]Sensor) {
 	return sensors
 }
 
-func getAm(data []Data) (ams []Am) {
+func getAm(data []Data) (ams []Am, err error) {
 	Info("get am")
 	for _, v := range data {
 		if !existAm(ams, v["My"]) {
@@ -331,7 +410,7 @@ func getAm(data []Data) (ams []Am) {
 	// Am 排序
 
 	// 补足缺失月份
-	ams = rLostAm(ams)
+	ams, err = rLostAm(ams)
 
 	return
 }
@@ -345,9 +424,10 @@ func existAm(ams []Am, my float64) bool {
 	return false
 }
 
-func rLostAm(ams []Am) []Am {
+func rLostAm(ams []Am) (ams2 []Am, err error) {
 	location, _ := time.LoadLocation("Local")
-	ams2 := []Am{ams[0]}
+
+	ams2 = append(ams2, ams[0])
 
 	for i := 1; i < len(ams); {
 		j := len(ams2) - 1
@@ -357,10 +437,13 @@ func rLostAm(ams []Am) []Am {
 			t := time.Date(int(ams2[j].Year), time.Month(int(ams2[j].Month)+2), 0, 0, 0, 0, 0, location)
 
 			am := Am{
-				My:       parseFloat(t.Format("200601")),
 				Year:     float64(t.Year()),
 				Month:    float64(t.Month()),
 				NotExist: true,
+			}
+			am.My, err = strconv.ParseFloat(t.Format("200601"), 64)
+			if err != nil {
+				return
 			}
 
 			ams2 = append(ams2, am)
@@ -372,5 +455,5 @@ func rLostAm(ams []Am) []Am {
 		}
 	}
 
-	return ams2
+	return
 }

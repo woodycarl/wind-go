@@ -39,13 +39,13 @@ type Result struct {
 
 type Sensor struct {
 	Channel      string
-	Type         int
+	Type         string
 	Description  string
 	Details      string
 	SerialNumber string
 	Height       int
-	ScaleFactor  float64
-	Offset       float64
+	ScaleFactor  string
+	Offset       string
 	Units        string
 
 	Rations []Ration
@@ -64,7 +64,7 @@ type Site struct {
 	SiteElevation float64
 	Latitude      string
 	Longitude     string
-	TimeOffset    float64
+	TimeOffset    string
 }
 
 type Ration struct {

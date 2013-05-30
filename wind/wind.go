@@ -18,7 +18,10 @@ func HandleData(data [][]string, c Config) (r []Result, err error) {
 	for i, _ := range r {
 		r[i].S.AirDensity = c.AirDensity
 		r[i].S.Sensors = sensorClassify(r[i].S.SensorsR)
-		r[i].S.Am = getAm(r[i].D1)
+		r[i].S.Am, err = getAm(r[i].D1)
+		if err != nil {
+			return
+		}
 	}
 	Info("sensorClassify + getAm", time.Now().Sub(timeS))
 
