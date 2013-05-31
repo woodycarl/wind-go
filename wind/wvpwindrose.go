@@ -1,8 +1,8 @@
 package wind
 
 import (
-	"strconv"
 	"math"
+	"strconv"
 )
 
 type WvpArg struct {
@@ -17,21 +17,20 @@ func WvpWindrose(V, P []float64, arg WvpArg) (Ay []float64, wvF, wpF []float64) 
 		wpsums[index] = wpsums[index] + P[i]
 	}
 
-	step := math.Ceil(ArrayMax(V)/float64(arg.Interval))
-	Ay = []float64{0.5,}
-	for i:=1; float64(i)<=step; i++ {
+	step := math.Ceil(ArrayMax(V) / float64(arg.Interval))
+	Ay = []float64{0.5}
+	for i := 1; float64(i) <= step; i++ {
 		Ay = append(Ay, float64(i*arg.Interval))
 	}
 
-	
 	allNum := len(V)
 	allWp := 0.0
 	for _, v := range wpsums {
 		allWp = allWp + v
 	}
 
-	for i:=0; i<len(Ay); i++ {
-		index:= strconv.Itoa(i)
+	for i := 0; i < len(Ay); i++ {
+		index := strconv.Itoa(i)
 		wvF = append(wvF, 100*float64(wvsums[index])/float64(allNum))
 		wpF = append(wpF, 100*wpsums[index]/allWp)
 	}
@@ -40,7 +39,7 @@ func WvpWindrose(V, P []float64, arg WvpArg) (Ay []float64, wvF, wpF []float64) 
 }
 
 func getWvIndex(v float64, interval int) int {
-	if v<0.5 {
+	if v < 0.5 {
 		return 0
 	}
 	return int(v/float64(interval)) + 1

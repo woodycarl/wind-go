@@ -5,7 +5,7 @@ import (
 )
 
 func handleIndex(w http.ResponseWriter, r *http.Request) {
-	page := Page {
+	page := Page{
 		"hideResultMenu": true,
 	}
 

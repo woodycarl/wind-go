@@ -73,18 +73,18 @@ func decRaw(data [][]string) (r []Result, err error) {
 			Warn(v.S.Site.Site + ": no 1h data! gen from 10m data.")
 			r[i].D1 = genD1fD2(v.D2, v.S.SensorsR)
 			if len(r[i].D1) < 1 {
-				Error("can not gen 1h data!")
-				err = errors.New(v.S.Site.Site + ": no 1h data!")
+				Error(v.S.Site.Site + "can not gen 1h data!")
+				err = errors.New(v.S.Site.Site + ": can not gen 1h data!")
 				return
 			}
 			Info(len(r[i].D1), "save D1")
-			go saveRData(strconv.Itoa(g()), r[i].D1, r[i].S.SensorsR)
+			// go saveRData(strconv.Itoa(g()), r[i].D1, r[i].S.SensorsR)
 		}
 
 		if len(v.D2) < 1 {
-			Error(v.S.Site.Site + ": no 10m data!")
-			err = errors.New(v.S.Site.Site + ": no 10m data!")
-			return
+			Warn(v.S.Site.Site + ": no 10m data!")
+			// err = errors.New(v.S.Site.Site + ": no 10m data!")
+			// return
 		}
 	}
 
@@ -286,7 +286,7 @@ func decDataSDRch(lines []string, s []Sensor) (r []Data) {
 		r = append(r, chData[i]...)
 	}
 
-	go saveRData(strconv.Itoa(g()), r, s)
+	// go saveRData(strconv.Itoa(g()), r, s)
 
 	return
 }

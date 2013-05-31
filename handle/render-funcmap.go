@@ -1,19 +1,19 @@
 package handle
 
 import (
-	"text/template"
 	"encoding/json"
 	"fmt"
+	"text/template"
 )
 
 var funcMap = template.FuncMap{
-	"equal": equal,
+	"equal":  equal,
 	"addInt": addInt,
 	"toJson": toJson,
 }
 
 func equal(a, b interface{}) bool {
-	if a==b {
+	if a == b {
 		return true
 	}
 	return false
@@ -33,4 +33,3 @@ func toJson(a interface{}) string {
 
 	return string(b)
 }
-

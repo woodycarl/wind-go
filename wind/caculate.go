@@ -234,8 +234,18 @@ func calTurb(v1 Sensor, db1, db10 DB, ch chan ChTurb) {
 	channel := v1.Channel
 	data1 := db1.filter("ChAvg"+channel+" >=", 14.5).filter("ChAvg"+channel+" <=", 15.5)
 
+	if len(data1) < 1 {
+		Error("calTurb: not enough data!")
+		// 需要增加错误返回
+	}
+
 	turb := []float64{}
 	for _, v2 := range data1 {
+		if len(db10) < 1 {
+			turbulence := v2["ChSd"+channel] / v2["ChAvg"+channel]
+			turb = append(turb, turbulence)
+			continue
+		}
 
 		tS := time.Unix(int64(v2["Time"]), 0)
 		tE := float64(time.Date(tS.Year(), tS.Month(), tS.Day(), tS.Hour()+1, 0, 0, 0, location).Unix())
