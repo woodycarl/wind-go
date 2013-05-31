@@ -5,6 +5,7 @@ import (
 	"runtime"
 
 	"github.com/gorilla/mux"
+	. "github.com/woodycarl/wind-go/logger"
 )
 
 func init() {
@@ -13,6 +14,8 @@ func init() {
 }
 
 func Main() {
+	Info("System Start...")
+
 	http.Handle("/css/", http.FileServer(http.Dir("template")))
 	http.Handle("/js/", http.FileServer(http.Dir("template")))
 	http.Handle("/img/", http.FileServer(http.Dir("template")))

@@ -23,7 +23,6 @@ func linests(r []Result) []Result {
 		for ir, v1 := range r {
 			for is, _ := range v1.S.Sensors[v] {
 				go linest(v, ir, is, r, chLinest)
-
 			}
 		}
 	}

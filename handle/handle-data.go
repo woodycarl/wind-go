@@ -56,9 +56,9 @@ func handleData(w http.ResponseWriter, r *http.Request) {
 
 		os.Mkdir(OUTPUT_DIR+id, 0700)
 
-		go saveWvptData(id, v.S.DataTime, v.S.DataWv, v.S.DataWd)
-		go saveRData(id, v.RD, v.S)
 		go saveData(data)
+		go saveRData(id, v.RD, v.S)
+		go saveWvptData(id, v.S.DataTime, v.S.DataWv, v.S.DataWd)
 	}
 
 	http.Redirect(w, r, "/result", http.StatusFound)

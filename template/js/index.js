@@ -9,11 +9,13 @@ function handleFileSelect(evt) {
 
 	$("#file_list").html("");
 
+	/*
 	if (files.length%2 != 0) {
 		new Message("error", "同时需要1小时和10分钟数据文件！").show("#load_file .message").autohide();
 		$("#load_file_next").addClass("disabled");
 		return
 	}
+	*/
 
 	for (var i=0; i<files.length; i++) {
 		var file = files[i];

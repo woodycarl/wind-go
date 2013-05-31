@@ -323,6 +323,10 @@ func countDays(year, month int) (days int) {
 }
 
 func chooseOneYear(am []Am) (cm []Am) {
+	if len(am) < 12 {
+		Error("len am < 12")
+	}
+
 	choise := map[int]float64{}
 	for i := 0; i < len(am)-11; i++ {
 		for j := i; j < i+12; j++ {

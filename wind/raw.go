@@ -17,14 +17,18 @@ type RawData struct {
 	is10m bool
 	err   error
 }
+type ChAjustR struct {
+	err error
+	r   Result
+}
 
-func decRaw(data [][]string, c Config) (r []Result, err error) {
+func decRaw(data [][]string) (r []Result, err error) {
 	Info("DecRaw Start")
 	timeS := time.Now()
 
 	var chRaw = make(chan RawData, len(data))
 	for _, v := range data {
-		go DecodeData(v, c, chRaw)
+		go DecodeData(v, chRaw)
 	}
 
 	for _, _ = range data {
@@ -63,8 +67,38 @@ func decRaw(data [][]string, c Config) (r []Result, err error) {
 		r = append(r, res)
 	}
 
+	for i, v := range r {
+		Info(len(v.D1), len(v.D2))
+		if len(v.D1) < 1 {
+			Warn(v.S.Site.Site + ": no 1h data! gen from 10m data.")
+			r[i].D1 = genD1fD2(v.D2, v.S.SensorsR)
+			if len(r[i].D1) < 1 {
+				Error("can not gen 1h data!")
+				err = errors.New(v.S.Site.Site + ": no 1h data!")
+				return
+			}
+			Info(len(r[i].D1), "save D1")
+			go saveRData(strconv.Itoa(g()), r[i].D1, r[i].S.SensorsR)
+		}
+
+		if len(v.D2) < 1 {
+			Error(v.S.Site.Site + ": no 10m data!")
+			err = errors.New(v.S.Site.Site + ": no 10m data!")
+			return
+		}
+	}
+
+	chR := make(chan ChAjustR, len(r))
+	for _, v := range r {
+		go adjustR(v, chR)
+	}
 	for i, _ := range r {
-		r[i].ID = r[i].S.Site.Site
+		tD := <-chR
+		if tD.err != nil {
+			err = tD.err
+			return
+		}
+		r[i] = tD.r
 	}
 
 	Info("DecRaw End", time.Now().Sub(timeS))
@@ -98,7 +132,7 @@ func isSameStation(s1, s2 Station) bool {
 }
 
 // 解析原始数据，返回到 channel
-func DecodeData(lines []string, c Config, ch chan RawData) {
+func DecodeData(lines []string, ch chan RawData) {
 	Info("---Decode Data ---", len(lines))
 	var chData RawData
 	var linesR []string
@@ -246,6 +280,8 @@ func decDataSDRch(lines []string, s []Sensor) (r []Data) {
 		r = append(r, chData[i]...)
 	}
 
+	go saveRData(strconv.Itoa(g()), r, s)
+
 	return
 }
 func decDataSDR(lines []string, s []Sensor, index int, ch chan ChDecData) {
@@ -287,6 +323,9 @@ func decDataSDR(lines []string, s []Sensor, index int, ch chan ChDecData) {
 			}
 
 			start := j*4 + 1
+			if start+3 >= len(data) {
+				continue
+			}
 			js := v.Channel
 
 			tData["ChAvg"+js], chDecData.err = strconv.ParseFloat(data[start], 64)
@@ -302,20 +341,20 @@ func decDataSDR(lines []string, s []Sensor, index int, ch chan ChDecData) {
 				ch <- chDecData
 				return
 			}
-			/*
-				tData["ChMax"+js], chDecData.err = strconv.ParseFloat(data[start+2], 64)
-				if chDecData.err != nil {
-					Error("decDataSDR: ChMax"+js, chDecData.err)
-					ch <- chDecData
-					return
-				}
 
-				tData["ChMin"+js], chDecData.err = strconv.ParseFloat(data[start+4], 64)
-				if chDecData.err != nil {
-					Error("decDataSDR: ChMin"+js, chDecData.err)
-					ch <- chDecData
-					return
-				}*/
+			tData["ChMax"+js], chDecData.err = strconv.ParseFloat(data[start+2], 64)
+			if chDecData.err != nil {
+				Error("decDataSDR: ChMax"+js, chDecData.err)
+				ch <- chDecData
+				return
+			}
+
+			tData["ChMin"+js], chDecData.err = strconv.ParseFloat(data[start+3], 64)
+			if chDecData.err != nil {
+				Error("decDataSDR: ChMin"+js, chDecData.err)
+				ch <- chDecData
+				return
+			}
 		}
 
 		r = append(r, tData)
@@ -330,47 +369,77 @@ func getLineStr(str string) string {
 }
 
 func decodeDate(data string) (t time.Time, f float64, err error) {
+	var year, month, date, hour, minute int
+	var my string
+	location, _ := time.LoadLocation("Local")
+
 	re := regexp.MustCompile(`^(\d{4})\/(\d{1,2})\/(\d{1,2})(\s\w+|)\s(\d{1,2}):(\d{1,2})(:\d{1,2}|)$`)
-	if !re.MatchString(data) {
+	if re.MatchString(data) {
+		td := re.FindStringSubmatch(data)
+
+		year, err = strconv.Atoi(td[1])
+		if err != nil {
+			return
+		}
+
+		month, err = strconv.Atoi(td[2])
+		if err != nil {
+			return
+		}
+
+		date, err = strconv.Atoi(td[3])
+		if err != nil {
+			return
+		}
+
+		hour, err = strconv.Atoi(td[5])
+		if err != nil {
+			return
+		}
+
+		minute, err = strconv.Atoi(td[6])
+		if err != nil {
+			return
+		}
+
+		my = td[1] + td[2]
+	} else if re = regexp.MustCompile(`^(\d{1,2})[\/|-](\d{1,2})[\/|-](\d{4})\s(\d{1,2}):(\d{1,2})(:\d{1,2}|)$`); re.MatchString(data) {
+		td := re.FindStringSubmatch(data)
+
+		year, err = strconv.Atoi(td[3])
+		if err != nil {
+			return
+		}
+
+		month, err = strconv.Atoi(td[1])
+		if err != nil {
+			return
+		}
+
+		date, err = strconv.Atoi(td[2])
+		if err != nil {
+			return
+		}
+
+		hour, err = strconv.Atoi(td[4])
+		if err != nil {
+			return
+		}
+
+		minute, err = strconv.Atoi(td[5])
+		if err != nil {
+			return
+		}
+
+		my = td[3] + td[1]
+	} else {
 		err = errors.New("date format err")
 		return
 	}
 
-	td := re.FindStringSubmatch(data)
-
-	var year, month, date, hour, minute int
-	year, err = strconv.Atoi(td[1])
-	if err != nil {
-		return
-	}
-
-	month, err = strconv.Atoi(td[2])
-	if err != nil {
-		return
-	}
-
-	date, err = strconv.Atoi(td[3])
-	if err != nil {
-		return
-	}
-
-	hour, err = strconv.Atoi(td[5])
-	if err != nil {
-		return
-	}
-
-	minute, err = strconv.Atoi(td[6])
-	if err != nil {
-		return
-	}
-
-	location, _ := time.LoadLocation("Local")
 	t = time.Date(year, time.Month(month), date, hour, minute, 0, 0, location)
 
-	f, err = strconv.ParseFloat(td[1]+td[2], 64)
-	if err != nil {
-		return
-	}
+	f, err = strconv.ParseFloat(my, 64)
 	return
 }
 
@@ -379,12 +448,18 @@ func sensorClassify(sensorsR []Sensor) map[string]([]Sensor) {
 	sensors := map[string]([]Sensor){}
 	for _, v := range sensorsR {
 		units := map[string]string{
-			"m/s":   "wv",
-			"deg":   "wd",
-			"Volts": "vol",
-			"%RH":   "h",
-			"C":     "t",
-			"kPa":   "p",
+			"m/s":       "wv",
+			"mph":       "wv",
+			"deg":       "wd",
+			"Degrees":   "wd",
+			"Volts":     "vol",
+			"v":         "vol",
+			"%RH":       "h",
+			"C":         "t",
+			"Degrees F": "t",
+			"F":         "t",
+			"kPa":       "p",
+			"mb":        "p",
 		}
 
 		sensor := units[v.Units]
@@ -443,6 +518,7 @@ func rLostAm(ams []Am) (ams2 []Am, err error) {
 			}
 			am.My, err = strconv.ParseFloat(t.Format("200601"), 64)
 			if err != nil {
+				Error("rLostAm", err)
 				return
 			}
 
@@ -453,6 +529,94 @@ func rLostAm(ams []Am) (ams2 []Am, err error) {
 			ams2 = append(ams2, ams[i])
 			i = i + 1
 		}
+	}
+
+	return
+}
+
+func adjustR(r Result, ch chan ChAjustR) {
+	var chAjustR ChAjustR
+
+	r.ID = r.S.Site.Site
+	r.S.Sensors = sensorClassify(r.S.SensorsR)
+	r.S.Am, chAjustR.err = getAm(r.D1)
+	if chAjustR.err != nil {
+		ch <- chAjustR
+		return
+	}
+
+	for _, v := range r.S.SensorsR {
+		switch v.Units {
+		case "mph":
+			r.D1 = adjustRTimes(r.D1, v.Channel, 1.6/3.6)
+			r.D2 = adjustRTimes(r.D2, v.Channel, 1.6/3.6)
+		case "Degrees F", "F":
+			r.D1 = adjustRAdd(r.D1, v.Channel, -273.15)
+			r.D2 = adjustRAdd(r.D2, v.Channel, -273.15)
+		case "mb":
+			r.D1 = adjustRTimes(r.D1, v.Channel, 0.1)
+			r.D2 = adjustRTimes(r.D2, v.Channel, 0.1)
+		}
+	}
+
+	chAjustR.r = r
+	ch <- chAjustR
+}
+
+func adjustRTimes(data []Data, ch string, t float64) []Data {
+	for i, _ := range data {
+		data[i]["ChAvg"+ch] = data[i]["ChAvg"+ch] * t
+	}
+	return data
+}
+func adjustRAdd(data []Data, ch string, t float64) []Data {
+	for i, _ := range data {
+		data[i]["ChAvg"+ch] = data[i]["ChAvg"+ch] + t
+	}
+	return data
+}
+
+func genD1fD2(d2 []Data, s []Sensor) (d1 []Data) {
+	// 假设数据按是严格时间顺序排列
+	location, _ := time.LoadLocation("Local")
+	var ds DB
+	var val time.Time
+	var my float64
+
+	for i, v := range d2 {
+		t := time.Unix(int64(v["Time"]), 0)
+		if i == 0 {
+			val = t
+			my = v["My"]
+		}
+		if i == len(d2)-1 {
+			// 最后一个数据，不要了，写起来真麻烦
+		}
+		if val.Format("2006-01-02-15") == t.Format("2006-01-02-15") {
+			ds = append(ds, v)
+			continue
+		}
+		t1 := time.Date(val.Year(), val.Month(), val.Day(), val.Hour(), 0, 0, 0, location)
+		data := Data{
+			"Time":  float64(t1.Unix()),
+			"Hour":  float64(t1.Hour()),
+			"My":    my,
+			"Year":  float64(t1.Year()),
+			"Month": float64(t1.Month()),
+		}
+		for _, v1 := range s {
+			ch := v1.Channel
+			data["ChAvg"+ch] = ArrayAvg(ds.get("ChAvg" + ch)["ChAvg"+ch])
+			data["ChSd"+ch] = ArrayAvg(ds.get("ChSd" + ch)["ChSd"+ch])
+			data["ChMin"+ch] = ArrayAvg(ds.get("ChMin" + ch)["ChMin"+ch])
+			data["ChMax"+ch] = ArrayAvg(ds.get("ChMax" + ch)["ChMax"+ch])
+		}
+
+		d1 = append(d1, data)
+
+		val = t
+		my = v["My"]
+		ds = DB{}
 	}
 
 	return
