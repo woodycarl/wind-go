@@ -1,6 +1,7 @@
 package wind
 
 import (
+	"errors"
 	"math"
 	"math/rand"
 	"strconv"
@@ -9,6 +10,192 @@ import (
 	. "github.com/woodycarl/wind-go/logger"
 )
 
+type ErrRT struct {
+	id  string
+	cat string
+	err [][]bool
+}
+type ErrC struct {
+	id  string
+	cat string
+	err [][][]bool
+}
+
+func getErrsRT(errs []ErrRT, id, cat string, index int) (e []bool, err error) {
+	if len(errs) < 1 {
+		err = errors.New("getErrRT: no data!")
+		return
+	}
+
+	for _, v := range errs {
+		if v.id == id && v.cat == cat {
+			if index > len(v.err)-1 {
+				err = errors.New("getErrRT: out of range!")
+				return
+			}
+			e = v.err[index]
+			return
+		}
+	}
+
+	if e == nil {
+		err = errors.New("getErrRT: get none!")
+		return
+	}
+
+	return
+}
+func getErrsC(errs []ErrC, id, cat string, indexI, indexJ int) (e []bool, err error) {
+	if len(errs) < 1 {
+		err = errors.New("getErrC: no data!")
+		return
+	}
+
+	for _, v := range errs {
+		if v.id == id && v.cat == cat {
+			if indexI > len(v.err)-1 {
+				err = errors.New("getErrRT: out of range!")
+				return
+			}
+			e = v.err[indexI][indexJ]
+			return
+		}
+	}
+
+	if e == nil {
+		err = errors.New("getErrC: get none!")
+		return
+	}
+
+	return
+}
+
+func revises(r []Result, c Config) (rr []Result, err error) {
+	Info("---Revise---")
+
+	// 1.Lost
+	for i, v := range r {
+		r[i].RD = rLost(v.S, v.D1, c)
+	}
+
+	// 2.合理性修订
+	var errsR []ErrRT
+	catsR := []string{"wv", "wd"}
+	for _, v := range r {
+		db := DB(v.RD)
+		for _, v1 := range catsR {
+			errR := ErrRT{
+				id:  v.ID,
+				cat: v1,
+				err: getErrR(db, v1, v.S.Sensors[v1]),
+			}
+
+			errsR = append(errsR, errR)
+		}
+	}
+
+	for i, v := range r {
+		data := v.RD
+		for _, v1 := range catsR {
+			for iI, v2 := range v.S.Sensors[v1] {
+				chI := v2.Channel
+				var errI []bool
+				errI, err = getErrsRT(errsR, v.ID, v1, iI)
+				if err != nil {
+					return
+				}
+
+				for j, v3 := range data {
+					if errI[j] {
+						// 修订方法1，如果存在相关性数据，根据相关性来计算
+						if len(v2.Rations) > 0 {
+							var ration Ration
+							var d float64
+							for _, v4 := range v2.Rations {
+								if v.ID == v4.ID {
+									// 同ID根据相关性改
+
+									var e []bool
+									e, err = getErrsRT(errsR, v4.ID, v1, v4.Index)
+									if err != nil {
+										return
+									}
+
+									if !e[j] {
+										ration = v4
+										d = v3["ChAvg"+v4.Channel]
+										break
+									}
+								}
+
+								if v.ID != v4.ID {
+									var f float64
+									var indexR int
+									indexR, err = getRByID(r, v4.ID)
+									if err != nil {
+										return
+									}
+									f, err = getDataByTime(r[indexR].D1, v3["Time"], v4.Channel)
+									if err != nil {
+										return
+									}
+
+									if !jR(f, v1) {
+										ration = v4
+										d = f
+										break
+									}
+								}
+							}
+
+							r[i].RD[j]["ChAvg"+chI] = ration.Slope*d + ration.Intercept
+							continue
+						}
+
+						// 修订方法2，上下正常值的平均值
+						if j > 0 && j < len(errI)-1 && !errI[j-1] && !errI[j+1] {
+							r[i].RD[j]["ChAvg"+chI] = (r[i].RD[j-1]["ChAvg"+chI] + r[i].RD[j+1]["ChAvg"+chI]) / 2
+							continue
+						}
+					}
+				}
+			}
+		}
+	}
+
+	rr = r
+	return
+}
+
+func getDataByTime(data []Data, t float64, ch string) (f float64, err error) {
+	for _, v := range data {
+		if v["Time"] == t {
+			if d, ok := v["ChAvg"+ch]; ok {
+				f = d
+				return
+			}
+			err = errors.New("getDataByTime: no data in this channel!")
+			return
+		}
+	}
+
+	err = errors.New("getDataByTime: get none!")
+	return
+}
+
+func getRByID(r []Result, id string) (index int, err error) {
+	for i, v := range r {
+		if v.ID == id {
+			index = i
+			return
+		}
+	}
+
+	err = errors.New("getRByID: get none!")
+	return
+}
+
+/*
 func revises(r []Result, c Config) []Result {
 	Info("---Revise---")
 	for i, v := range r {
@@ -17,6 +204,7 @@ func revises(r []Result, c Config) []Result {
 
 	return r
 }
+*/
 
 func revise(s Station, data []Data, c Config) []Data {
 	// 1.Lost
@@ -26,7 +214,7 @@ func revise(s Station, data []Data, c Config) []Data {
 	db := DB(rData)
 	catR := []string{"wv", "wd"}
 	for _, v := range catR {
-		errs := getErrR(db, v, s.Sensors)
+		errs := getErrR(db, v, s.Sensors[v])
 		rData = rRationality(v, errs, s.Sensors[v], rData)
 	}
 
@@ -34,7 +222,7 @@ func revise(s Station, data []Data, c Config) []Data {
 	db = DB(rData)
 	catT := []string{"wv", "t", "p"}
 	for _, v := range catT {
-		errs := getErrT(db, v, s.Sensors)
+		errs := getErrT(db, v, s.Sensors[v])
 		rData = rTrends(v, errs, s.Sensors[v], rData)
 	}
 
@@ -42,7 +230,7 @@ func revise(s Station, data []Data, c Config) []Data {
 	db = DB(rData)
 	catC := []string{"wv"}
 	for _, v := range catC {
-		errs := getErrC(db, v, s.Sensors)
+		errs := getErrC(db, v, s.Sensors[v])
 		rData = rCorrelation(v, errs, s.Sensors[v], rData)
 	}
 

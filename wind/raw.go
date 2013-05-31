@@ -319,6 +319,7 @@ func decDataSDR(lines []string, s []Sensor, index int, ch chan ChDecData) {
 			"Time":  float64(t.Unix()),
 			"Hour":  float64(t.Hour()),
 			"My":    my,
+			"Day":   float64(t.Day()),
 			"Year":  float64(t.Year()),
 			"Month": float64(t.Month()),
 		}
@@ -607,6 +608,7 @@ func genD1fD2(d2 []Data, s []Sensor) (d1 []Data) {
 			"Time":  float64(t1.Unix()),
 			"Hour":  float64(t1.Hour()),
 			"My":    my,
+			"Day":   float64(t1.Day()),
 			"Year":  float64(t1.Year()),
 			"Month": float64(t1.Month()),
 		}
