@@ -57,6 +57,15 @@ func ArrayMax(array []float64) float64 {
 	}
 	return max
 }
+func ArrayMin(array []float64) float64 {
+	min := array[0]
+	for _, v := range array {
+		if min > v {
+			min = v
+		}
+	}
+	return min
+}
 func ArrayMinI(array []float64) (index int, min float64) {
 	min = array[0]
 	for i, v := range array {

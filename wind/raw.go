@@ -138,13 +138,19 @@ func DecodeData(lines []string, ch chan RawData) {
 	var linesR []string
 	var data []Data
 
+	// 需要增加const
 	if len(lines) < 100 {
-		chData.err = errors.New("DecodeData: not enough data")
+		chData.err = errors.New("DecodeData: not enough data!")
 		ch <- chData
 		return
 	}
 
 	t := strings.Split(lines[0], "\t")
+	if len(t) < 2 {
+		chData.err = errors.New("DecodeData: file system format err!")
+		ch <- chData
+		return
+	}
 	s := Station{
 		System:  t[0],
 		Version: t[1],
@@ -608,8 +614,8 @@ func genD1fD2(d2 []Data, s []Sensor) (d1 []Data) {
 			ch := v1.Channel
 			data["ChAvg"+ch] = ArrayAvg(ds.get("ChAvg" + ch)["ChAvg"+ch])
 			data["ChSd"+ch] = ArrayAvg(ds.get("ChSd" + ch)["ChSd"+ch])
-			data["ChMin"+ch] = ArrayAvg(ds.get("ChMin" + ch)["ChMin"+ch])
-			data["ChMax"+ch] = ArrayAvg(ds.get("ChMax" + ch)["ChMax"+ch])
+			data["ChMin"+ch] = ArrayMin(ds.get("ChMin" + ch)["ChMin"+ch])
+			data["ChMax"+ch] = ArrayMax(ds.get("ChMax" + ch)["ChMax"+ch])
 		}
 
 		d1 = append(d1, data)

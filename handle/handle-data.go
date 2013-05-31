@@ -3,6 +3,7 @@ package handle
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"mime/multipart"
 	"net/http"
@@ -16,6 +17,12 @@ import (
 func handleData(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(32 << 20) // 32MB is the default used by FormFile
 	files := r.MultipartForm.File["files"]
+
+	if len(files) < 1 {
+		err := errors.New("no file upload!")
+		handleErr(w, err)
+		return
+	}
 
 	var rawData [][]string
 	for _, fh := range files {
