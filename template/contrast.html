@@ -1,0 +1,38 @@
+{{define "content"}}
+<!-- Contrast -->
+
+
+<table class="table table-condensed">
+	<thead>
+		<th style="width:130px;">时间</th>
+		{{range .s}}
+		<td colspan="2">Ch{{.Channel}}</td>
+		{{end}}
+	</thead>
+	<tbody>
+	{{range .ds}}
+	<tr>
+		<th>{{showTime .Time "2006/01/02-15"}}</th>
+		{{range .Data}}
+		<td>{{printf "%0.1f" .O}}</td>
+		<td {{if .M}}class="label label-important"{{end}}>{{printf "%0.1f" .N}}</td>
+		{{end}}
+	</tr>
+	{{end}}
+	</tbody>
+</table>
+
+<div class="dig">
+	<div class="modal-header">
+		<h3>双比</h3>
+	</div>
+
+	<div class="modal-body">
+
+	</div>
+
+	<div class="modal-footer">
+		<div class="message"></div>
+	</div>
+</div><!-- /Contrast -->
+{{end}}

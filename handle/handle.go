@@ -41,6 +41,8 @@ func Main() {
 	r.HandleFunc("/result/{id}/wvp-freq", handleWvpFreq)
 	//r.HandleFunc("/result/{id}/turbine/wvp", handleTurbineWvp)
 
+	r.HandleFunc("/result/{id}/contrast", handleContrast)
+
 	http.Handle("/", r)
 
 	http.ListenAndServe(":"+config.Port, nil)

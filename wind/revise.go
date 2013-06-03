@@ -75,7 +75,10 @@ func revises(r []Result, c Config) (rr []Result, err error) {
 
 	// 1.Lost
 	for i, v := range r {
-		r[i].RD = rLost(v.S, v.D1, c)
+		r[i].RD, err = rLost(v.S, v.D1, c)
+		if err != nil {
+			return
+		}
 	}
 
 	// 2.合理性修订
@@ -204,7 +207,7 @@ func revises(r []Result, c Config) []Result {
 
 	return r
 }
-*/
+
 
 func revise(s Station, data []Data, c Config) []Data {
 	// 1.Lost
@@ -236,11 +239,18 @@ func revise(s Station, data []Data, c Config) []Data {
 
 	return rData
 }
+*/
 
-func rLost(s Station, data []Data, c Config) []Data {
+func rLost(s Station, data []Data, c Config) (rData []Data, err error) {
+	// 需要增加const
+	if len(data) < 5000 {
+		err = errors.New("rLost: not enough data!")
+		return
+	}
+
 	db := DB(data)
 
-	monthData, hourData := getMonthHourData(s, db, c.AllowMinMax)
+	monthData, hourData := getMonthHourData(s, db)
 
 	/* 按给定月份小时数据平均值来给定一个新值 */
 	avgMonthHour := func(ch, month, hour string) float64 {
@@ -264,7 +274,6 @@ func rLost(s Station, data []Data, c Config) []Data {
 	}
 
 	/* 补充缺失数据 */
-	var rData []Data
 	for _, v := range s.Cm {
 		dataMy := db.filter("My", v.My)
 
@@ -274,7 +283,7 @@ func rLost(s Station, data []Data, c Config) []Data {
 		for j := 0; j < v.Sbm; j++ {
 			d := Data{}
 			t := getNewDate(int(v.Year), int(v.Month), j)
-			if len(dataMy) > k && float64(t.Unix())-dataMy[k]["Time"] > 0 {
+			if len(dataMy) > k && float64(t.Unix())-dataMy[k]["Time"] >= 0.0 {
 				d = dataMy[k]
 				k = k + 1
 			} else {
@@ -376,14 +385,14 @@ func rLost(s Station, data []Data, c Config) []Data {
 		}
 	}
 
-	return rData
+	return
 }
 
 type Dt map[string][]float64
 type DDt map[string]Dt
 type DDDt map[string]DDt
 
-func getMonthHourData(s Station, db DB, allowMinMax bool) (DDt, DDDt) {
+func getMonthHourData(s Station, db DB) (DDt, DDDt) {
 	/* 分类提取月份小时的数据 */
 	monthData := DDt{}
 	hourData := DDDt{}
@@ -405,10 +414,10 @@ func getMonthHourData(s Station, db DB, allowMinMax bool) (DDt, DDDt) {
 			ch := v2.Channel
 			monthDataI["ChAvg"+ch] = dbMD.get("ChAvg" + ch)["ChAvg"+ch]
 			monthDataI["ChSd"+ch] = dbMD.get("ChSd" + ch)["ChSd"+ch]
-			if allowMinMax {
-				monthDataI["ChMin"+ch] = dbMD.get("ChMin" + ch)["ChMin"+ch]
-				monthDataI["ChMax"+ch] = dbMD.get("ChMax" + ch)["ChMax"+ch]
-			}
+
+			monthDataI["ChMin"+ch] = dbMD.get("ChMin" + ch)["ChMin"+ch]
+			monthDataI["ChMax"+ch] = dbMD.get("ChMax" + ch)["ChMax"+ch]
+
 		}
 		m := strconv.Itoa(int(v1.Month))
 		monthData[m] = monthDataI
@@ -422,10 +431,10 @@ func getMonthHourData(s Station, db DB, allowMinMax bool) (DDt, DDDt) {
 				ch := v3.Channel
 				hourDataIJ["ChAvg"+ch] = dbHD.get("ChAvg" + ch)["ChAvg"+ch]
 				hourDataIJ["ChSd"+ch] = dbHD.get("ChSd" + ch)["ChSd"+ch]
-				if allowMinMax {
-					hourDataIJ["ChMin"+ch] = dbHD.get("ChMin" + ch)["ChMin"+ch]
-					hourDataIJ["ChMax"+ch] = dbHD.get("ChMax" + ch)["ChMax"+ch]
-				}
+
+				hourDataIJ["ChMin"+ch] = dbHD.get("ChMin" + ch)["ChMin"+ch]
+				hourDataIJ["ChMax"+ch] = dbHD.get("ChMax" + ch)["ChMax"+ch]
+
 			}
 			hourDataI[h] = hourDataIJ
 		}
