@@ -18,11 +18,18 @@
 		<tr><th>数据1</th><th>数据2</th><th>Rsq</th><th>Slope</th><th>Intercept</th></tr>
 	</thead>
 	<tbody>
-	{{range .sensors}}{{$ch1 := .Channel}}
-		{{range .Rations}}{{$ch2 := .Channel}}
-		<tr><td>Ch{{$ch1}}</td><td>Ch{{$ch2}}</td><td>{{printf "%0.3f" .Rsq}}</td><td>{{printf "%0.3f" .Slope}}</td><td>{{printf "%0.3f" .Intercept}}</td></tr>
-		{{end}}
+
+{{range .sensors}}{{$ch1 := .Channel}}
+	{{range .Rations}}{{$ch2 := .Channel}}
+		<tr>
+			<td>Ch{{$ch1}}</td>
+			<td>Ch{{$ch2}}</td>
+			<td>{{printf "%0.3f" .Rsq}}</td>
+			<td>{{printf "%0.3f" .Slope}}</td>
+			<td>{{printf "%0.3f" .Intercept}}</td>
+		</tr>
 	{{end}}
+{{end}}
 
 	</tbody>
 </table>

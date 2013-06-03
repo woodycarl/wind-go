@@ -15,6 +15,7 @@ var filelist = {
 		if (file.type!="text/plain") {
 			type = "error";
 		}
+		
 		new Message(type, content).show("#"+alertId);
 	}
 }

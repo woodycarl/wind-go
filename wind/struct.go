@@ -81,8 +81,6 @@ type Am struct {
 	Year  float64
 	Month float64
 
-	NotExist bool
-
 	Rwv  int
 	Rwd  int
 	Twv  int
@@ -94,6 +92,8 @@ type Am struct {
 	All  int
 	Sbm  int
 	Sr   float64
+
+	NotExist bool
 }
 
 type Err struct {
