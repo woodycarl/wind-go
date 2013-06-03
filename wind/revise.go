@@ -22,11 +22,6 @@ type ErrC struct {
 }
 
 func getErrsRT(errs []ErrRT, id, cat string, index int) (e []bool, err error) {
-	if len(errs) < 1 {
-		err = errors.New("getErrRT: no data!")
-		return
-	}
-
 	for _, v := range errs {
 		if v.id == id && v.cat == cat {
 			if index > len(v.err)-1 {
@@ -46,11 +41,6 @@ func getErrsRT(errs []ErrRT, id, cat string, index int) (e []bool, err error) {
 	return
 }
 func getErrsC(errs []ErrC, id, cat string, indexI, indexJ int) (e []bool, err error) {
-	if len(errs) < 1 {
-		err = errors.New("getErrC: no data!")
-		return
-	}
-
 	for _, v := range errs {
 		if v.id == id && v.cat == cat {
 			if indexI > len(v.err)-1 {
@@ -98,103 +88,45 @@ func revises(r []Result, c Config) (rr []Result, err error) {
 	}
 
 	for i, v := range r {
-		data := v.RD
-		for _, v1 := range catsR {
-			for iI, v2 := range v.S.Sensors[v1] {
-				chI := v2.Channel
-				var errI []bool
-				errI, err = getErrsRT(errsR, v.ID, v1, iI)
+		for _, cat := range catsR {
+			for iSensor, sensor := range v.S.Sensors[cat] {
+				r[i].RD, err = rRationality(r, i, cat, iSensor, sensor, errsR, v.RD)
 				if err != nil {
 					return
 				}
+			}
+		}
+	}
 
-				for j, v3 := range data {
-					if errI[j] {
-						// 修订方法1，如果存在相关性数据，根据相关性来计算
-						if len(v2.Rations) > 0 {
-							var ration Ration
-							var d float64
-							for _, v4 := range v2.Rations {
-								if v.ID == v4.ID {
-									// 同ID根据相关性改
+	// 3.趋势性修订
+	var errsT []ErrRT
+	catsT := []string{"wv", "t", "p"}
+	for _, v := range r {
+		db := DB(v.RD)
+		for _, cat := range catsT {
+			errT := ErrRT{
+				id:  v.ID,
+				cat: cat,
+				err: getErrT(db, cat, v.S.Sensors[cat]),
+			}
 
-									var e []bool
-									e, err = getErrsRT(errsR, v4.ID, v1, v4.Index)
-									if err != nil {
-										return
-									}
+			errsT = append(errsT, errT)
+		}
+	}
 
-									if !e[j] {
-										ration = v4
-										d = v3["ChAvg"+v4.Channel]
-										break
-									}
-								}
-
-								if v.ID != v4.ID {
-									var f float64
-									var indexR int
-									indexR, err = getRByID(r, v4.ID)
-									if err != nil {
-										return
-									}
-									f, err = getDataByTime(r[indexR].D1, v3["Time"], v4.Channel)
-									if err != nil {
-										return
-									}
-
-									if !jR(f, v1) {
-										ration = v4
-										d = f
-										break
-									}
-								}
-							}
-
-							r[i].RD[j]["ChAvg"+chI] = ration.Slope*d + ration.Intercept
-							continue
-						}
-
-						// 修订方法2，上下正常值的平均值
-						if j > 0 && j < len(errI)-1 && !errI[j-1] && !errI[j+1] {
-							r[i].RD[j]["ChAvg"+chI] = (r[i].RD[j-1]["ChAvg"+chI] + r[i].RD[j+1]["ChAvg"+chI]) / 2
-							continue
-						}
-					}
+	for i, v := range r {
+		data := v.RD
+		for _, cat := range catsT {
+			for iSensor, sensor := range v.S.Sensors[cat] {
+				r[i].RD, err = rTrends(r, i, cat, iSensor, sensor, errsT, data)
+				if err != nil {
+					return
 				}
 			}
 		}
 	}
 
 	rr = r
-	return
-}
-
-func getDataByTime(data []Data, t float64, ch string) (f float64, err error) {
-	for _, v := range data {
-		if v["Time"] == t {
-			if d, ok := v["ChAvg"+ch]; ok {
-				f = d
-				return
-			}
-			err = errors.New("getDataByTime: no data in this channel!")
-			return
-		}
-	}
-
-	err = errors.New("getDataByTime: get none!")
-	return
-}
-
-func getRByID(r []Result, id string) (index int, err error) {
-	for i, v := range r {
-		if v.ID == id {
-			index = i
-			return
-		}
-	}
-
-	err = errors.New("getRByID: get none!")
 	return
 }
 
@@ -444,105 +376,217 @@ func getMonthHourData(s Station, db DB) (DDt, DDDt) {
 	return monthData, hourData
 }
 
-func rRationality(cat string, errs [][]bool, s []Sensor, data []Data) []Data {
-	for i, v1 := range s {
-		errI := errs[i]
-		chI := v1.Channel
+func getDataByTime(data []Data, t float64, ch string) (f float64, err error) {
+	for _, v := range data {
+		if v["Time"] == t {
+			if d, ok := v["ChAvg"+ch]; ok {
+				f = d
+				return
+			}
+			err = errors.New("getDataByTime: no data in this channel!")
+			return
+		}
+	}
 
-		for j, v2 := range data {
-			if jR(v2["ChAvg"+chI], cat) {
-				if !errI[j] {
-					errI[j] = true
+	err = errors.New("getDataByTime: get none!")
+	return
+}
+
+func getRByID(r []Result, id string) (index int, err error) {
+	for i, v := range r {
+		if v.ID == id {
+			index = i
+			return
+		}
+	}
+
+	err = errors.New("getRByID: get none!")
+	return
+}
+
+func rRationality(r []Result, i int, cat string, iSensor int, sensor Sensor, errsR []ErrRT, data []Data) (rd []Data, err error) {
+	chI := sensor.Channel
+	var errI []bool
+	errI, err = getErrsRT(errsR, r[i].ID, cat, iSensor)
+	if err != nil {
+		return
+	}
+
+	for j, dataJ := range data {
+		if errI[j] {
+			// 修订方法1，如果存在相关性数据，根据相关性来计算
+			if len(sensor.Rations) > 0 {
+				var ration Ration
+				var d float64
+				var b bool
+
+				b, d, ration, err = rChannel(r, i, cat, sensor.Rations, j, dataJ, errsR)
+				if err != nil {
+					return
 				}
 
-				// 修订方法1，上下正常值的平均值
-				if j > 0 && j < len(errI)-1 && !errI[j-1] && !errI[j+1] {
-					data[j]["ChAvg"+chI] = (data[j-1]["ChAvg"+chI] + data[j+1]["ChAvg"+chI]) / 2
+				if !b {
+					data[j]["ChAvg"+chI] = ration.Slope*d + ration.Intercept
 					continue
 				}
+			}
 
-				// 修订方法2，如果传感器多于1个，根据相关性来计算
-				if len(s) > 1 {
-					b, ch := rChannel(s[i].Rations, j, errs)
-					if b {
-						ration := v1.Rations[ch]
-						chJ := ration.Channel
+			// 修订方法2，上下正常值的平均值
+			if j > 0 && j < len(errI)-1 && !errI[j-1] && !errI[j+1] {
+				data[j]["ChAvg"+chI] = (data[j-1]["ChAvg"+chI] + data[j+1]["ChAvg"+chI]) / 2
+				continue
+			}
+			// 3.
 
-						data[j]["ChAvg"+chI] = ration.Slope*data[j]["ChAvg"+chJ] + ration.Intercept
+			Warn("rRationality: not handle!", r[i].ID, "j")
+			//err = errors.New("rRationality:" + r[i].ID + " j ")
+			//return
+		}
+	}
+
+	rd = data
+
+	return
+}
+func rChannel(r []Result, i int, cat string, rations []Ration, j int, data Data, errsR []ErrRT) (b bool, f float64, ration Ration, err error) {
+	for _, v := range rations {
+		if r[i].ID == v.ID {
+			// 同ID根据相关性改
+
+			var e []bool
+			e, err = getErrsRT(errsR, v.ID, cat, v.Index)
+			if err != nil {
+				return
+			}
+
+			if !e[j] {
+				ration = v
+				f = data["ChAvg"+v.Channel]
+				return
+			}
+		}
+
+		if r[i].ID != v.ID {
+			var indexR int
+			indexR, err = getRByID(r, v.ID)
+			if err != nil {
+				return
+			}
+
+			f, err = getDataByTime(r[indexR].D1, data["Time"], v.Channel)
+			if err != nil {
+				return
+			}
+
+			if !jR(f, cat) {
+				ration = v
+				return
+			}
+		}
+	}
+
+	b = true
+	return
+}
+
+func rTrends(r []Result, i int, cat string, iSensor int, sensor Sensor, errsT []ErrRT, data []Data) (rd []Data, err error) {
+	chI := sensor.Channel
+
+	for j := 0; j < len(data)-1; j++ {
+		data1 := data[j]["ChAvg"+chI]
+		data2 := data[j+1]["ChAvg"+chI]
+
+		if jT(data1, data2, cat) {
+			// 修订方法1，如果传感器多于1个，根据相关性来计算
+			if len(sensor.Rations) > 0 {
+				var ration Ration
+				var d1, d2 float64
+				var b bool
+
+				b, d1, d2, ration, err = tChannel(r, i, cat, sensor.Rations, j, errsT)
+				if err != nil {
+					return
+				}
+
+				if !b {
+					if td1 := ration.Slope*d1 + ration.Intercept; jT(td1, data2, cat) {
+						data[j]["ChAvg"+chI] = td1
+						continue
+					} else if td2 := ration.Slope*d2 + ration.Intercept; jT(td1, td2, cat) {
+						data[j]["ChAvg"+chI] = td1
+						data[j+1]["ChAvg"+chI] = td2
 						continue
 					}
 				}
+			}
 
-				// 需要修订方法3，
+			// 修订方法2，为之前两个值的平均值
+			if j > 1 {
+				data[j]["ChAvg"+chI] = (data[j-1]["ChAvg"+chI] + data[j-2]["ChAvg"+chI]) / 2
+				continue
+			}
+
+			// 需要修订方法3，
+			Warn("rTrends: not handle!", r[i].ID, j)
+			//err = errors.New("rTrends:" + r[i].ID + " j ")
+			//return
+		}
+	}
+
+	rd = data
+
+	return
+}
+func tChannel(r []Result, i int, cat string, rations []Ration, j int, errsR []ErrRT) (b bool, d1, d2 float64, ration Ration, err error) {
+	for _, v := range rations {
+		if r[i].ID == v.ID {
+
+			var e []bool
+			e, err = getErrsRT(errsR, v.ID, cat, v.Index)
+			if err != nil {
+				return
+			}
+
+			switch {
+			case j == 0 && !e[j] && !e[j+1]:
+				fallthrough
+			case j == len(r[i].RD)-1 && !e[j-1] && !e[j]:
+				fallthrough
+			case j > 0 && j < len(r[i].RD)-1 && !e[j-1] && !e[j] && !e[j+1]:
+				ration = v
+				d1 = r[i].RD[j]["ChAvg"+v.Channel]
+				d2 = r[i].RD[j+1]["ChAvg"+v.Channel]
+				return
+			}
+		}
+
+		if r[i].ID != v.ID {
+			Info("!=")
+			var indexR int
+			indexR, err = getRByID(r, v.ID)
+			if err != nil {
+				return
+			}
+
+			d1, err = getDataByTime(r[indexR].D1, r[i].RD[j]["Time"], v.Channel)
+			if err != nil {
+				return
+			}
+
+			d2, err = getDataByTime(r[indexR].D1, r[i].RD[j+1]["Time"], v.Channel)
+			if err != nil {
+				return
+			}
+
+			if !jT(d1, d2, cat) {
+				ration = v
+				return
 			}
 		}
 	}
 
-	return data
-}
-func rChannel(r []Ration, i int, errs [][]bool) (bool, int) {
-	for j, v := range r {
-		k := v.Index
-		if !errs[k][i] {
-			return true, j
-		}
-	}
-	return false, 0
-}
-
-func rTrends(cat string, errs [][]bool, s []Sensor, data []Data) []Data {
-	for i, v1 := range s {
-		errI := errs[i]
-		chI := v1.Channel
-
-		for j := 0; j < len(data)-1; j++ {
-			data1 := data[j]["ChAvg"+chI]
-			data2 := data[j+1]["ChAvg"+chI]
-
-			if jT(data1, data2, cat) {
-				if !errI[j] {
-					errI[j] = true
-				}
-
-				// 修订方法1，如果传感器多于1个，根据相关性来计算
-				if len(s) > 1 {
-					b, ch := tChannel(s[i].Rations, j, errs)
-					if b {
-						ration := v1.Rations[ch]
-						chJ := ration.Channel
-
-						data[j]["ChAvg"+chI] = ration.Slope*data[j]["ChAvg"+chJ] + ration.Intercept
-						continue
-					}
-				}
-
-				// 修订方法2，为之前两个值的平均值
-				if j > 1 {
-					data[j]["ChAvg"+chI] = (data[j-1]["ChAvg"+chI] + data[j-2]["ChAvg"+chI]) / 2
-					continue
-				}
-
-				// 需要修订方法3，
-			}
-		}
-	}
-
-	return data
-}
-func tChannel(r []Ration, i int, errs [][]bool) (bool, int) {
-	for j, v := range r {
-		k := v.Index
-		if i == 0 {
-			if !errs[k][i] {
-				return true, j
-			}
-			continue
-		}
-		if !errs[k][i] && !errs[k][i-1] {
-			return true, j
-		}
-	}
-	return false, 0
+	b = true
+	return
 }
 
 func rCorrelation(cat string, errs [][][]bool, s []Sensor, data []Data) []Data {
