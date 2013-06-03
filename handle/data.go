@@ -9,13 +9,9 @@ import (
 	"github.com/woodycarl/wind-go/wind"
 )
 
-var (
-	datas []Data
-)
+var datas []Data
 
-const (
-	OUTPUT_DIR = "./output/"
-)
+const OUTPUT_DIR = "./output/"
 
 type Data struct {
 	Id      string

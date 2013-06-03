@@ -1,8 +1,6 @@
 package handle
 
-import (
-	"net/http"
-)
+import "net/http"
 
 func handleErr(w http.ResponseWriter, err error) {
 	page := Page{

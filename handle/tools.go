@@ -17,6 +17,7 @@ func generateID() func() string {
 		if v.IsDir() {
 			xs := strings.Split(v.Name(), "-")
 			x, _ := strconv.Atoi(xs[0])
+
 			if x > num {
 				num = x
 			}

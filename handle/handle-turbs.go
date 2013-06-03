@@ -29,6 +29,7 @@ func handleTurbs(w http.ResponseWriter, r *http.Request) {
 			Height:  v.Height,
 			Turb:    s.Turbs[i],
 		}
+
 		turbs = append(turbs, turb)
 	}
 

@@ -23,16 +23,20 @@ func handleInfo(w http.ResponseWriter, r *http.Request) {
 	switch cat {
 	case "info-site":
 		page["site"] = s.Site
+
 	case "info-logger":
 		page["logger"] = s.Logger
+
 	case "info-sensors":
 		page["sensors"] = s.SensorsR
 		page["system"] = s.System
 		page["version"] = s.Version
+
 	case "integrity":
 		page["start"] = s.Cm[0].My
 		page["end"] = s.Cm[11].My
 		page["cm"] = s.Cm
+
 	case "integrity-all":
 		type Years struct {
 			Year float64
