@@ -1,11 +1,12 @@
 package handle
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/mux"
-	//. "github.com/woodycarl/wind-go/logger"
+	. "github.com/woodycarl/wind-go/logger"
 	"github.com/woodycarl/wind-go/wind"
 )
 
@@ -64,6 +65,8 @@ func handleContrast(w http.ResponseWriter, r *http.Request) {
 		ds = append(ds, d)
 	}
 
+	go saveCData(id, s.SensorsR, ds)
+
 	page := Page{
 		"id": id,
 		"ds": ds,
@@ -71,4 +74,38 @@ func handleContrast(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page.render("contrast", w)
+}
+
+func saveCData(id string, s []wind.Sensor, ds []ContrastData) {
+	timeS := time.Now()
+	var lines []string
+	line := "Time"
+
+	for _, v := range s {
+		line = line + "\tCh" + v.Channel + "-O" + "\tCh" + v.Channel + "-N" + "\tModified"
+	}
+
+	lines = append(lines, line)
+
+	for _, v := range ds {
+		line = v.Time.Format("2006/01/02 15:04:05")
+
+		for _, v1 := range v.Data {
+			line = line + "\t" + fmt.Sprintf("%0.2f", v1.O) + "\t" + fmt.Sprintf("%0.2f", v1.N)
+			if v1.M {
+				line = line + "\t" + "*"
+			} else {
+				line = line + "\t"
+			}
+		}
+
+		lines = append(lines, line)
+	}
+
+	err := writeLines(lines, OUTPUT_DIR+id+"/data-c.txt")
+	if err != nil {
+		Error("saveContrastData", err)
+		return
+	}
+	Info("saveContrastData", time.Now().Sub(timeS))
 }

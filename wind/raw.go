@@ -202,13 +202,6 @@ func decInfoSDR(lines []string) (sensors []Sensor, logger Logger, site Site, lin
 				return
 			}
 
-			/*
-				if len(sensor.Units) < 1 {
-					err = errors.New("sensor units empty!")
-					return
-				}
-			*/
-
 			switch sensor.Units {
 			case "", "-----", "unit":
 				sensor.NotInstalled = true
@@ -219,16 +212,20 @@ func decInfoSDR(lines []string) (sensors []Sensor, logger Logger, site Site, lin
 				sensor.NotInstalled = true
 			}
 
-			/*
-				re := regexp.MustCompile(`^Height\s+([\d\.]+)(\s+|)(m|ft)`)
-			*/
-			sensor.Height, err = strconv.ParseFloat(strings.Fields(getLineStr(lines[i+5]))[0], 64)
-			if err != nil && sensor.NotInstalled != true {
-				// 需要增加没有高度值时的处理
-				Error("decInfoSDR: sensor height get err!", err)
-				return
+			re := regexp.MustCompile(`^Height\s+([\d\.]+)[\s]*(m|ft)`)
+			if re.MatchString(lines[i+5]) {
+				td := re.FindStringSubmatch(lines[i+5])
+
+				sensor.Height, err = strconv.ParseFloat(td[1], 64)
+				if err != nil {
+					return
+				}
+
+				// 单位转换
+				if td[2] == "ft" {
+					sensor.Height = sensor.Height * 0.3048
+				}
 			}
-			err = nil
 
 			sensors = append(sensors, sensor)
 			i = i + 8
