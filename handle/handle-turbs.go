@@ -8,7 +8,7 @@ import (
 
 type TurbData struct {
 	Channel string
-	Height  int
+	Height  float64
 	Turb    float64
 }
 

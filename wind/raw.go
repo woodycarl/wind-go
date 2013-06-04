@@ -202,13 +202,28 @@ func decInfoSDR(lines []string) (sensors []Sensor, logger Logger, site Site, lin
 				return
 			}
 
-			if len(sensor.Units) < 1 {
-				err = errors.New("sensor units empty!")
-				return
+			/*
+				if len(sensor.Units) < 1 {
+					err = errors.New("sensor units empty!")
+					return
+				}
+			*/
+
+			switch sensor.Units {
+			case "", "-----", "unit":
+				sensor.NotInstalled = true
 			}
 
-			sensor.Height, err = strconv.Atoi(strings.Fields(getLineStr(lines[i+5]))[0])
-			if err != nil && sensor.Description != "No SCM Installed" && getLineStr(lines[i+5]) != "m" {
+			switch sensor.Description {
+			case "No SCM Installed", "No Sensor", "Custom": // Custom
+				sensor.NotInstalled = true
+			}
+
+			/*
+				re := regexp.MustCompile(`^Height\s+([\d\.]+)(\s+|)(m|ft)`)
+			*/
+			sensor.Height, err = strconv.ParseFloat(strings.Fields(getLineStr(lines[i+5]))[0], 64)
+			if err != nil && sensor.NotInstalled != true {
 				// 需要增加没有高度值时的处理
 				Error("decInfoSDR: sensor height get err!", err)
 				return
@@ -380,7 +395,7 @@ func decodeDate(data string) (t time.Time, f float64, err error) {
 	var my string
 	location, _ := time.LoadLocation("Local")
 
-	re := regexp.MustCompile(`^(\d{4})\/(\d{1,2})\/(\d{1,2})(\s\w+|)\s(\d{1,2}):(\d{1,2})(:\d{1,2}|)$`)
+	re := regexp.MustCompile(`^(\d{4})[\/|-](\d{1,2})[\/|-](\d{1,2})(\s\w+|)\s(\d{1,2}):(\d{1,2})(:\d{1,2}|)$`)
 	if re.MatchString(data) {
 		td := re.FindStringSubmatch(data)
 

@@ -1,6 +1,7 @@
 package handle
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -45,7 +46,7 @@ func handleWvpFreq(w http.ResponseWriter, r *http.Request) {
 		}
 
 		wvpFreData := WvpFreqData{
-			Title: "(Ch" + channel + ")" + strconv.Itoa(height) + "m高度风速风功率密度分布直方图",
+			Title: "(Ch" + channel + ")" + fmt.Sprint(height) + "m高度风速风功率密度分布直方图",
 			Vf:    vf,
 			Pf:    pf,
 			Cats:  cats,

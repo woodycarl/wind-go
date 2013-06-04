@@ -2,14 +2,16 @@
 <!-- Contrast -->
 <table class="table table-condensed">
 	<thead>
-		<th style="width:130px;">时间</th>
+		<th>序号</th>
+		<th style="width:110px;">时间</th>
 		{{range .s}}
 		<td colspan="2">Ch{{.Channel}}</td>
 		{{end}}
 	</thead>
 	<tbody>
-	{{range .ds}}
+	{{range $i, $v := .ds}}
 	<tr>
+		<td>{{$i}}</td>
 		<th>{{showTime .Time "2006/01/02-15"}}</th>
 		{{range .Data}}
 		<td>{{printf "%0.1f" .O}}</td>

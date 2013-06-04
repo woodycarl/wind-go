@@ -10,22 +10,19 @@ import (
 	. "github.com/woodycarl/wind-go/logger"
 )
 
-type ErrRT struct {
+var test = 0
+
+type ErrRTC struct {
 	id  string
 	cat string
 	err [][]bool
 }
-type ErrC struct {
-	id  string
-	cat string
-	err [][][]bool
-}
 
-func getErrsRT(errs []ErrRT, id, cat string, index int) (e []bool, err error) {
+func getErrRTC(errs []ErrRTC, id, cat string, index int) (e []bool, err error) {
 	for _, v := range errs {
 		if v.id == id && v.cat == cat {
 			if index > len(v.err)-1 {
-				err = errors.New("getErrRT: out of range!")
+				err = errors.New("getErrRTC: out of range!")
 				return
 			}
 			e = v.err[index]
@@ -34,27 +31,15 @@ func getErrsRT(errs []ErrRT, id, cat string, index int) (e []bool, err error) {
 	}
 
 	if e == nil {
-		err = errors.New("getErrRT: get none!")
+		err = errors.New("getErrRTC: get none!")
 		return
 	}
 
 	return
 }
-func getErrsC(errs []ErrC, id, cat string, indexI, indexJ int) (e []bool, err error) {
+func calErrNumC1(errs [][][]bool) (errt [][]bool) {
 	for _, v := range errs {
-		if v.id == id && v.cat == cat {
-			if indexI > len(v.err)-1 {
-				err = errors.New("getErrRT: out of range!")
-				return
-			}
-			e = v.err[indexI][indexJ]
-			return
-		}
-	}
-
-	if e == nil {
-		err = errors.New("getErrC: get none!")
-		return
+		errt = append(errt, calErrNumRT(v))
 	}
 
 	return
@@ -72,12 +57,12 @@ func revises(r []Result, c Config) (rr []Result, err error) {
 	}
 
 	// 2.合理性修订
-	var errsR []ErrRT
+	var errsR []ErrRTC
 	catsR := []string{"wv", "wd"}
 	for _, v := range r {
 		db := DB(v.RD)
 		for _, v1 := range catsR {
-			errR := ErrRT{
+			errR := ErrRTC{
 				id:  v.ID,
 				cat: v1,
 				err: getErrR(db, v1, v.S.Sensors[v1]),
@@ -99,12 +84,12 @@ func revises(r []Result, c Config) (rr []Result, err error) {
 	}
 
 	// 3.趋势性修订
-	var errsT []ErrRT
+	var errsT []ErrRTC
 	catsT := []string{"wv", "t", "p"}
 	for _, v := range r {
 		db := DB(v.RD)
 		for _, cat := range catsT {
-			errT := ErrRT{
+			errT := ErrRTC{
 				id:  v.ID,
 				cat: cat,
 				err: getErrT(db, cat, v.S.Sensors[cat]),
@@ -115,10 +100,37 @@ func revises(r []Result, c Config) (rr []Result, err error) {
 	}
 
 	for i, v := range r {
-		data := v.RD
 		for _, cat := range catsT {
 			for iSensor, sensor := range v.S.Sensors[cat] {
-				r[i].RD, err = rTrends(r, i, cat, iSensor, sensor, errsT, data)
+				r[i].RD, err = rTrends(r, i, cat, iSensor, sensor, errsT, v.RD)
+				if err != nil {
+					return
+				}
+			}
+		}
+	}
+
+	// 4.相关性修订
+	var errsC []ErrRTC
+	catsC := []string{"wv"}
+	for _, v := range r {
+		db := DB(v.RD)
+		for _, cat := range catsC {
+
+			errC := ErrRTC{
+				id:  v.ID,
+				cat: cat,
+				err: calErrNumC1(getErrC(db, cat, v.S.Sensors[cat])),
+			}
+
+			errsC = append(errsC, errC)
+		}
+	}
+
+	for i, v := range r {
+		for _, cat := range catsC {
+			for iSensor, sensor := range v.S.Sensors[cat] {
+				r[i].RD, err = rCorrelation(r, i, cat, iSensor, sensor, errsC, v.RD)
 				if err != nil {
 					return
 				}
@@ -129,49 +141,6 @@ func revises(r []Result, c Config) (rr []Result, err error) {
 	rr = r
 	return
 }
-
-/*
-func revises(r []Result, c Config) []Result {
-	Info("---Revise---")
-	for i, v := range r {
-		r[i].RD = revise(v.S, v.D1, c)
-	}
-
-	return r
-}
-
-
-func revise(s Station, data []Data, c Config) []Data {
-	// 1.Lost
-	rData := rLost(s, data, c)
-
-	// 2.合理性修订
-	db := DB(rData)
-	catR := []string{"wv", "wd"}
-	for _, v := range catR {
-		errs := getErrR(db, v, s.Sensors[v])
-		rData = rRationality(v, errs, s.Sensors[v], rData)
-	}
-
-	// 3.趋势性修订
-	db = DB(rData)
-	catT := []string{"wv", "t", "p"}
-	for _, v := range catT {
-		errs := getErrT(db, v, s.Sensors[v])
-		rData = rTrends(v, errs, s.Sensors[v], rData)
-	}
-
-	// 4.相关性修订
-	db = DB(rData)
-	catC := []string{"wv"}
-	for _, v := range catC {
-		errs := getErrC(db, v, s.Sensors[v])
-		rData = rCorrelation(v, errs, s.Sensors[v], rData)
-	}
-
-	return rData
-}
-*/
 
 func rLost(s Station, data []Data, c Config) (rData []Data, err error) {
 	// 需要增加const
@@ -404,10 +373,10 @@ func getRByID(r []Result, id string) (index int, err error) {
 	return
 }
 
-func rRationality(r []Result, i int, cat string, iSensor int, sensor Sensor, errsR []ErrRT, data []Data) (rd []Data, err error) {
+func rRationality(r []Result, i int, cat string, iSensor int, sensor Sensor, errsR []ErrRTC, data []Data) (rd []Data, err error) {
 	chI := sensor.Channel
 	var errI []bool
-	errI, err = getErrsRT(errsR, r[i].ID, cat, iSensor)
+	errI, err = getErrRTC(errsR, r[i].ID, cat, iSensor)
 	if err != nil {
 		return
 	}
@@ -426,7 +395,9 @@ func rRationality(r []Result, i int, cat string, iSensor int, sensor Sensor, err
 				}
 
 				if !b {
+
 					data[j]["ChAvg"+chI] = ration.Slope*d + ration.Intercept
+
 					continue
 				}
 			}
@@ -448,13 +419,11 @@ func rRationality(r []Result, i int, cat string, iSensor int, sensor Sensor, err
 
 	return
 }
-func rChannel(r []Result, i int, cat string, rations []Ration, j int, data Data, errsR []ErrRT) (b bool, f float64, ration Ration, err error) {
+func rChannel(r []Result, i int, cat string, rations []Ration, j int, data Data, errsR []ErrRTC) (b bool, f float64, ration Ration, err error) {
 	for _, v := range rations {
 		if r[i].ID == v.ID {
-			// 同ID根据相关性改
-
 			var e []bool
-			e, err = getErrsRT(errsR, v.ID, cat, v.Index)
+			e, err = getErrRTC(errsR, v.ID, cat, v.Index)
 			if err != nil {
 				return
 			}
@@ -489,7 +458,7 @@ func rChannel(r []Result, i int, cat string, rations []Ration, j int, data Data,
 	return
 }
 
-func rTrends(r []Result, i int, cat string, iSensor int, sensor Sensor, errsT []ErrRT, data []Data) (rd []Data, err error) {
+func rTrends(r []Result, i int, cat string, iSensor int, sensor Sensor, errsT []ErrRTC, data []Data) (rd []Data, err error) {
 	chI := sensor.Channel
 
 	for j := 0; j < len(data)-1; j++ {
@@ -537,12 +506,12 @@ func rTrends(r []Result, i int, cat string, iSensor int, sensor Sensor, errsT []
 
 	return
 }
-func tChannel(r []Result, i int, cat string, rations []Ration, j int, errsR []ErrRT) (b bool, d1, d2 float64, ration Ration, err error) {
+func tChannel(r []Result, i int, cat string, rations []Ration, j int, errsT []ErrRTC) (b bool, d1, d2 float64, ration Ration, err error) {
 	for _, v := range rations {
 		if r[i].ID == v.ID {
 
 			var e []bool
-			e, err = getErrsRT(errsR, v.ID, cat, v.Index)
+			e, err = getErrRTC(errsT, v.ID, cat, v.Index)
 			if err != nil {
 				return
 			}
@@ -589,70 +558,119 @@ func tChannel(r []Result, i int, cat string, rations []Ration, j int, errsR []Er
 	return
 }
 
-func rCorrelation(cat string, errs [][][]bool, s []Sensor, data []Data) []Data {
-	for i := 0; i < len(s)-1; i++ {
-		sI := s[i]
-		chI := sI.Channel
-		for j := i + 1; j < len(s); j++ {
-			sJ := s[j]
-			chJ := sJ.Channel
+func rCorrelation(r []Result, i int, cat string, iSensor int, sensor Sensor, errsC []ErrRTC, data []Data) (rd []Data, err error) {
+	chI := sensor.Channel
+	var errI []bool
+	errI, err = getErrRTC(errsC, r[i].ID, cat, iSensor)
+	if err != nil {
+		return
+	}
 
-			for k, v := range data {
-				dataI := v["ChAvg"+chI]
-				dataJ := v["ChAvg"+chJ]
-				heightI := sI.Height
-				heightJ := sJ.Height
+	for j, dataJ := range data {
+		if errI[j] {
+			// 修订方法1，如果存在相关性数据，根据相关性来计算
+			if len(sensor.Rations) > 0 {
+				var ration Ration
+				var d float64
+				var b bool
 
-				if jC(dataI, dataJ, float64(heightI), float64(heightJ), cat) {
-					if !errs[i][j][k] {
-						errs[i][j][k] = true
-						errs[j][i][k] = true
+				b, d, ration, err = cChannel(r, i, cat, sensor.Rations, j, dataJ, errsC)
+				if err != nil {
+					return
+				}
+
+				if !b {
+					if test < 100 {
+						print(j, data[j]["Time"], chI, data[j]["ChAvg"+chI])
 					}
 
-					doneI, doneJ := false, false
+					data[j]["ChAvg"+chI] = ration.Slope*d + ration.Intercept
+					if test < 100 {
+						println(data[j]["ChAvg"+chI])
+					}
+					continue
+				}
+			}
 
-					// 通道多于两个时采用相关性修订
-					if len(s) > 2 {
-						bI, cI := cChannel(s[i].Rations, i, j, k, errs)
-						bJ, cJ := cChannel(s[j].Rations, j, i, k, errs)
+			// 修订方法2，上下正常值的平均值
+			if j > 0 && j < len(errI)-1 && !errI[j-1] && !errI[j+1] {
+				if test < 100 {
+					print(j, data[j]["Time"], chI, data[j]["ChAvg"+chI])
+				}
+				data[j]["ChAvg"+chI] = (data[j-1]["ChAvg"+chI] + data[j+1]["ChAvg"+chI]) / 2
+				if test < 100 {
+					println(data[j]["ChAvg"+chI])
+				}
+				continue
+			}
+			// 3.
 
-						if bI {
-							ration := sI.Rations[cI]
-							ch := ration.Channel
-							data[k]["ChAvg"+chI] = ration.Slope*data[k]["ChAvg"+ch] + ration.Intercept
-							doneI = true
-						}
-						if bJ {
-							ration := sJ.Rations[cJ]
-							ch := ration.Channel
-							data[k]["ChAvg"+chJ] = ration.Slope*data[k]["ChAvg"+ch] + ration.Intercept
-							doneJ = true
-						}
+			Warn("rRationality: not handle!", r[i].ID, "j")
+			//err = errors.New("rRationality:" + r[i].ID + " j ")
+			//return
+		}
+	}
+
+	rd = data
+
+	return
+}
+func cChannel(r []Result, i int, cat string, rations []Ration, j int, data Data, errsC []ErrRTC) (b bool, f float64, ration Ration, err error) {
+	for _, v := range rations {
+		if r[i].ID == v.ID {
+			var e []bool
+			e, err = getErrRTC(errsC, v.ID, cat, v.Index)
+			if err != nil {
+				return
+			}
+
+			if !e[j] {
+				ration = v
+				f = data["ChAvg"+v.Channel]
+				return
+			}
+		}
+
+		if r[i].ID != v.ID {
+			var indexR int
+			indexR, err = getRByID(r, v.ID)
+			if err != nil {
+				return
+			}
+
+			var tb bool
+			f, err = getDataByTime(r[indexR].D1, data["Time"], v.Channel)
+			if err != nil {
+				return
+			}
+			height := float64(r[indexR].S.Sensors[cat][v.Index].Height)
+
+			for _, v1 := range r[indexR].S.Sensors[cat] {
+				if v1.Channel != v.Channel {
+					var f2 float64
+					f2, err = getDataByTime(r[indexR].D1, data["Time"], v1.Channel)
+					if err != nil {
+						return
 					}
 
-					// 方法2
-					if !doneI {
-					}
-					if !doneJ {
+					height1 := float64(v1.Height)
+
+					if jC(f, f2, height, height1, cat) {
+						tb = true
+						break
 					}
 				}
+			}
+
+			if !tb {
+				ration = v
+				return
 			}
 		}
 	}
 
-	return data
-}
-func cChannel(r []Ration, indexI, indexJ, i int, errs [][][]bool) (bool, int) {
-	for j, v := range r {
-		k := v.Index
-		if k == indexJ {
-			continue
-		}
-		if !errs[indexI][k][i] {
-			return true, j
-		}
-	}
-	return false, 0
+	b = true
+	return
 }
 
 func round(x float64, prec int) float64 {

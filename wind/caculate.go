@@ -283,7 +283,7 @@ func calWindShear(db DB, s []Sensor, chWss chan Wss) {
 		Index   int
 	}
 	type DH struct {
-		Height int
+		Height float64
 		Data   []DD
 	}
 
@@ -291,7 +291,7 @@ func calWindShear(db DB, s []Sensor, chWss chan Wss) {
 	dataH := []float64{}
 	dataWv := []float64{}
 
-	existDH := func(dh []DH, height int) (bool, int) {
+	existDH := func(dh []DH, height float64) (bool, int) {
 		for i, v := range dh {
 			if v.Height == height {
 				return true, i
