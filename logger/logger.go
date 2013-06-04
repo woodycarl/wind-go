@@ -15,10 +15,6 @@ func SetLogger(l *log.Logger) {
 	Log = l
 }
 
-func Trace(v ...interface{}) {
-	Log.Printf("[T] %v\n", v)
-}
-
 func Debug(v ...interface{}) {
 	Log.Printf("[D] %v\n", v)
 }
@@ -33,8 +29,4 @@ func Warn(v ...interface{}) {
 
 func Error(v ...interface{}) {
 	Log.Printf("[E] %v\n", v)
-}
-
-func Critical(v ...interface{}) {
-	Log.Printf("[C] %v\n", v)
 }

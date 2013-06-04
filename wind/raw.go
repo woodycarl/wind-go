@@ -202,18 +202,30 @@ func decInfoSDR(lines []string) (sensors []Sensor, logger Logger, site Site, lin
 				return
 			}
 
-			if len(sensor.Units) < 1 {
-				err = errors.New("sensor units empty!")
-				return
+			switch sensor.Units {
+			case "", "-----", "unit":
+				sensor.NotInstalled = true
 			}
 
-			sensor.Height, err = strconv.Atoi(strings.Fields(getLineStr(lines[i+5]))[0])
-			if err != nil && sensor.Description != "No SCM Installed" && getLineStr(lines[i+5]) != "m" {
-				// 需要增加没有高度值时的处理
-				Error("decInfoSDR: sensor height get err!", err)
-				return
+			switch sensor.Description {
+			case "No SCM Installed", "No Sensor", "Custom": // Custom
+				sensor.NotInstalled = true
 			}
-			err = nil
+
+			re := regexp.MustCompile(`^Height\s+([\d\.]+)[\s]*(m|ft)`)
+			if re.MatchString(lines[i+5]) {
+				td := re.FindStringSubmatch(lines[i+5])
+
+				sensor.Height, err = strconv.ParseFloat(td[1], 64)
+				if err != nil {
+					return
+				}
+
+				// 单位转换
+				if td[2] == "ft" {
+					sensor.Height = sensor.Height * 0.3048
+				}
+			}
 
 			sensors = append(sensors, sensor)
 			i = i + 8
@@ -319,6 +331,7 @@ func decDataSDR(lines []string, s []Sensor, index int, ch chan ChDecData) {
 			"Time":  float64(t.Unix()),
 			"Hour":  float64(t.Hour()),
 			"My":    my,
+			"Day":   float64(t.Day()),
 			"Year":  float64(t.Year()),
 			"Month": float64(t.Month()),
 		}
@@ -379,7 +392,7 @@ func decodeDate(data string) (t time.Time, f float64, err error) {
 	var my string
 	location, _ := time.LoadLocation("Local")
 
-	re := regexp.MustCompile(`^(\d{4})\/(\d{1,2})\/(\d{1,2})(\s\w+|)\s(\d{1,2}):(\d{1,2})(:\d{1,2}|)$`)
+	re := regexp.MustCompile(`^(\d{4})[\/|-](\d{1,2})[\/|-](\d{1,2})(\s\w+|)\s(\d{1,2}):(\d{1,2})(:\d{1,2}|)$`)
 	if re.MatchString(data) {
 		td := re.FindStringSubmatch(data)
 
@@ -607,6 +620,7 @@ func genD1fD2(d2 []Data, s []Sensor) (d1 []Data) {
 			"Time":  float64(t1.Unix()),
 			"Hour":  float64(t1.Hour()),
 			"My":    my,
+			"Day":   float64(t1.Day()),
 			"Year":  float64(t1.Year()),
 			"Month": float64(t1.Month()),
 		}

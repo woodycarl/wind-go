@@ -74,13 +74,13 @@ func calErrs(am []Am, data []Data, s map[string][]Sensor, c Config) []Am {
 	for i, v := range am {
 		dbMy := db.filter("My =", v.My)
 
-		errRwv := calErrNumRT(getErrR(dbMy, "wv", s))
-		errRwd := calErrNumRT(getErrR(dbMy, "wd", s))
-		errTwv := calErrNumRT(getErrT(dbMy, "wv", s))
-		errTt := calErrNumRT(getErrT(dbMy, "t", s))
-		errTp := calErrNumRT(getErrT(dbMy, "p", s))
-		errCwv := calErrNumC(getErrC(dbMy, "wv", s))
-		errCwd := calErrNumC(getErrC(dbMy, "wd", s))
+		errRwv := calErrNumRT(getErrR(dbMy, "wv", s["wv"]))
+		errRwd := calErrNumRT(getErrR(dbMy, "wd", s["wd"]))
+		errTwv := calErrNumRT(getErrT(dbMy, "wv", s["wv"]))
+		errTt := calErrNumRT(getErrT(dbMy, "t", s["t"]))
+		errTp := calErrNumRT(getErrT(dbMy, "p", s["p"]))
+		errCwv := calErrNumC(getErrC(dbMy, "wv", s["wv"]))
+		errCwd := calErrNumC(getErrC(dbMy, "wd", s["wd"]))
 
 		am[i].Rwv = trueNum(errRwv)
 		am[i].Rwd = trueNum(errRwd)
@@ -111,9 +111,9 @@ func calErrs(am []Am, data []Data, s map[string][]Sensor, c Config) []Am {
 	return am
 }
 
-func getErrR(db DB, cat string, s map[string][]Sensor) (errs [][]bool) {
+func getErrR(db DB, cat string, s []Sensor) (errs [][]bool) {
 
-	for _, v := range s[cat] {
+	for _, v := range s {
 		ch := v.Channel
 		data := db.get("ChAvg" + ch)["ChAvg"+ch]
 
@@ -145,9 +145,9 @@ func jR(data float64, cat string) (b bool) {
 	}
 	return
 }
-func getErrT(db DB, cat string, s map[string][]Sensor) (errs [][]bool) {
+func getErrT(db DB, cat string, s []Sensor) (errs [][]bool) {
 
-	for _, v := range s[cat] {
+	for _, v := range s {
 		ch := v.Channel
 		t := db.get("ChAvg" + ch + " time")
 		data := t["ChAvg"+ch]
@@ -225,23 +225,23 @@ func trueNum(err []bool) (num int) {
 	}
 	return
 }
-func getErrC(db DB, cat string, s map[string][]Sensor) (errs [][][]bool) {
+func getErrC(db DB, cat string, s []Sensor) (errs [][][]bool) {
 
-	if len(s[cat]) < 2 {
+	if len(s) < 2 {
 		return
 	}
 
 	var data [][]float64
-	for _, v := range s[cat] {
+	for _, v := range s {
 		ch := v.Channel
 		data = append(data, db.get("ChAvg" + ch)["ChAvg"+ch])
 	}
 
-	for i, v1 := range s[cat] {
+	for i, v1 := range s {
 		heightI := float64(v1.Height)
 
 		var errI [][]bool
-		for j, v2 := range s[cat] {
+		for j, v2 := range s {
 			heightJ := float64(v2.Height)
 
 			if i == j {

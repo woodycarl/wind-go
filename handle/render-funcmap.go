@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"text/template"
+	"time"
 )
 
 var funcMap = template.FuncMap{
-	"equal":  equal,
-	"addInt": addInt,
-	"toJson": toJson,
+	"equal":    equal,
+	"addInt":   addInt,
+	"toJson":   toJson,
+	"showTime": showTime,
 }
 
 func equal(a, b interface{}) bool {
@@ -32,4 +34,8 @@ func toJson(a interface{}) string {
 	}
 
 	return string(b)
+}
+
+func showTime(t time.Time, format string) string {
+	return t.Format(format)
 }

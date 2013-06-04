@@ -21,6 +21,7 @@ func handleResult(w http.ResponseWriter, r *http.Request) {
 				Id:   v.Name(),
 				Date: v.ModTime(),
 			}
+
 			results = append(results, result)
 		}
 	}

@@ -41,6 +41,7 @@ func saveRData(id string, data []Data, s []Sensor) {
 
 		for _, v2 := range s {
 			ch := v2.Channel
+
 			line = line + "\t" + fmt.Sprint(v1["ChAvg"+ch])
 			line = line + "\t" + fmt.Sprint(v1["ChSd"+ch])
 			line = line + "\t" + fmt.Sprint(v1["ChMin"+ch])

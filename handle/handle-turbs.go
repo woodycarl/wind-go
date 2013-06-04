@@ -8,7 +8,7 @@ import (
 
 type TurbData struct {
 	Channel string
-	Height  int
+	Height  float64
 	Turb    float64
 }
 
@@ -29,6 +29,7 @@ func handleTurbs(w http.ResponseWriter, r *http.Request) {
 			Height:  v.Height,
 			Turb:    s.Turbs[i],
 		}
+
 		turbs = append(turbs, turb)
 	}
 

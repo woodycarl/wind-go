@@ -14,6 +14,7 @@ type DB []Data
 func (db DB) Filter(str string, val float64) DB {
 	return db.filter(str, val)
 }
+
 func (db DB) filter(str string, val float64) DB {
 	col, method := decodeFilterStr(str)
 
