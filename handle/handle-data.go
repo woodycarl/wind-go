@@ -75,7 +75,7 @@ func saveWvptData(id string, ts, wv, wd []float64) {
 	timeS := time.Now()
 
 	if len(ts) != len(wv) || (len(ts)+len(wv))/2 != len(wd) || len(ts) < 8000 {
-		Error("saveWvptData\t1!")
+		Error("saveWvptData err!")
 		return
 	}
 

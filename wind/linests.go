@@ -79,7 +79,9 @@ func linest(v string, ir, is int, r []Result, ch chan ChLinestData) {
 				Warn(v1.ID, v3.ID, chI, chJ, v2.Height, v4.Height, r2, "Abandoned")
 				continue
 			}
+
 			Info(v1.ID, v3.ID, v2.Height, v4.Height, r2)
+
 			ration := Ration{
 				Index:     js,
 				ID:        v3.ID,

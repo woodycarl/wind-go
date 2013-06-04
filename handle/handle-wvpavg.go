@@ -1,6 +1,7 @@
 package handle
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -35,7 +36,7 @@ func handleWvpFig(w http.ResponseWriter, r *http.Request) {
 		Data    []float64
 		Avg     float64
 		Channel string
-		Height  int
+		Height  float64
 	}
 	type WvpFig struct {
 		Title       string
@@ -71,7 +72,7 @@ func handleWvpFig(w http.ResponseWriter, r *http.Request) {
 		}
 
 		wvpdata := WvpFigData{
-			Name:    channel + " (" + strconv.Itoa(height) + "m)",
+			Name:    channel + " (" + fmt.Sprint(height) + "m)",
 			Data:    ds,
 			Channel: channel,
 			Height:  height,
@@ -155,7 +156,7 @@ func handleWvpMhFig(w http.ResponseWriter, r *http.Request) {
 			}
 
 			wvps := WvpFig{
-				Title:  "Ch" + channel + "(" + strconv.Itoa(height) + "m)" + is + "月份风速风能日变化图",
+				Title:  "Ch" + channel + "(" + fmt.Sprint(height) + "m)" + is + "月份风速风能日变化图",
 				Cats:   cats,
 				WvData: dsv,
 				WpData: dsp,

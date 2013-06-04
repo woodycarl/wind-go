@@ -7,6 +7,7 @@ import (
 func ArrayAvg(array []float64) float64 {
 	return ArraySum(array) / float64(len(array))
 }
+
 func ArraySum(array []float64) float64 {
 	sum := 0.0
 	for _, v := range array {
@@ -15,6 +16,7 @@ func ArraySum(array []float64) float64 {
 
 	return sum
 }
+
 func ArrayAdd(array []float64, n float64) (r []float64) {
 	for _, v := range array {
 		r = append(r, v+n)
@@ -22,6 +24,7 @@ func ArrayAdd(array []float64, n float64) (r []float64) {
 
 	return r
 }
+
 func ArrayTime(arrayX, arrayY []float64) (r []float64) {
 	for i, _ := range arrayX {
 		r = append(r, arrayX[i]*arrayY[i])
@@ -29,6 +32,7 @@ func ArrayTime(arrayX, arrayY []float64) (r []float64) {
 
 	return r
 }
+
 func ArrayPow(array []float64, pow float64) (r []float64) {
 	for _, v := range array {
 		r = append(r, math.Pow(v, pow))
@@ -36,18 +40,21 @@ func ArrayPow(array []float64, pow float64) (r []float64) {
 
 	return r
 }
+
 func ArrayTimeN(array []float64, n float64) (r []float64) {
 	for _, v := range array {
 		r = append(r, v*n)
 	}
 	return
 }
+
 func ArrayMod(array []float64, m float64) (r []float64) {
 	for _, v := range array {
 		r = append(r, math.Mod(v, m))
 	}
 	return
 }
+
 func ArrayMax(array []float64) float64 {
 	max := array[0]
 	for _, v := range array {
@@ -57,6 +64,7 @@ func ArrayMax(array []float64) float64 {
 	}
 	return max
 }
+
 func ArrayMin(array []float64) float64 {
 	min := array[0]
 	for _, v := range array {
@@ -66,6 +74,7 @@ func ArrayMin(array []float64) float64 {
 	}
 	return min
 }
+
 func ArrayMinI(array []float64) (index int, min float64) {
 	min = array[0]
 	for i, v := range array {

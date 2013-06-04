@@ -43,12 +43,14 @@ type Sensor struct {
 	Description  string
 	Details      string
 	SerialNumber string
-	Height       int
+	Height       float64
 	ScaleFactor  string
 	Offset       string
 	Units        string
 
 	Rations []Ration
+
+	NotInstalled bool
 }
 type Logger struct {
 	Model       string
@@ -81,8 +83,6 @@ type Am struct {
 	Year  float64
 	Month float64
 
-	NotExist bool
-
 	Rwv  int
 	Rwd  int
 	Twv  int
@@ -94,6 +94,8 @@ type Am struct {
 	All  int
 	Sbm  int
 	Sr   float64
+
+	NotExist bool
 }
 
 type Err struct {
@@ -113,8 +115,8 @@ type Ws struct {
 	YI  int
 	XCh string
 	YCh string
-	XH  int
-	YH  int
+	XH  float64
+	YH  float64
 	Ws  float64
 }
 type Wss struct {

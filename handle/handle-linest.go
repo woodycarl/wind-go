@@ -38,9 +38,9 @@ func handleLinest(w http.ResponseWriter, r *http.Request) {
 
 type LinestFigData struct {
 	Ch1       string
-	Height1   int
+	Height1   float64
 	Ch2       string
-	Height2   int
+	Height2   float64
 	Data      string
 	Max2      float64
 	Slope     float64

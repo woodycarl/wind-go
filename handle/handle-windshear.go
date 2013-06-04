@@ -11,10 +11,10 @@ import (
 type WindshearData struct {
 	Points [][]float64
 	Line   [][]float64
+	Data   []wind.Ws
 	A      float64
 	B      float64
 	R      float64
-	Data   []wind.Ws
 }
 
 func handleWindshear(w http.ResponseWriter, r *http.Request) {
