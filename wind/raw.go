@@ -67,9 +67,8 @@ func decRaw(data [][]string) (r []Result, err error) {
 	}
 
 	for i, v := range r {
-		Info(len(v.D1), len(v.D2))
 		if len(v.D1) < 1 {
-			Warn(v.S.Site.Site + ": no 1h data! gen from 10m data.")
+			Warn(v.S.Site.Site+": no 1h data! gen from 10m data.", len(v.D2))
 			r[i].D1 = genD1fD2(v.D2, v.S.SensorsR)
 			if len(r[i].D1) < 1 {
 				Error(v.S.Site.Site + "can not gen 1h data!")
@@ -167,14 +166,14 @@ func DecodeData(lines []string, ch chan RawData) {
 		}
 		data = decDataSDRch(linesR, s.SensorsR)
 	case "Nomad2":
-		/*
-			s.SensorsR, s.Logger, s.Site, linesR, chData.err = decInfoNomad(lines)
-			if chData.err != nil {
-				ch <- chData
-				return
-			}
-			data = decDataNomadch(linesR, s.SensorsR)
-		*/
+		var ss []NomadSensor
+		ss, s.SensorsR, s.Logger, s.Site, linesR, chData.err = decInfoNomad(lines)
+		if chData.err != nil {
+			ch <- chData
+			return
+		}
+		data = decDataNomadch(linesR, ss, s.SensorsR)
+
 	default:
 		chData.err = errors.New("DecodeData: system not surport!")
 		ch <- chData
@@ -265,7 +264,7 @@ func decodeDate(data string) (t time.Time, f float64, err error) {
 
 		my = td[3] + td[1]
 	} else {
-		err = errors.New("date format err")
+		err = errors.New("date format err" + data)
 		return
 	}
 

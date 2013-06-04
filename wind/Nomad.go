@@ -1,11 +1,24 @@
 package wind
 
-/*
 import (
-	""
+	"errors"
+	"math"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
+
+	. "github.com/woodycarl/wind-go/logger"
 )
 
-func decInfoNomad(lines []string) (sensors []Sensor, logger Logger, site Site, linesR []string, err error) {
+type NomadSensor struct {
+	Height      float64
+	Description string
+	Units       string
+	Cat         string
+}
+
+func decInfoNomad(lines []string) (sensorsN []NomadSensor, sensors []Sensor, logger Logger, site Site, linesR []string, err error) {
 
 	for i := 0; i < len(lines); i++ {
 		if strings.Contains(lines[i], "Nomad2 Name") {
@@ -19,7 +32,7 @@ func decInfoNomad(lines []string) (sensors []Sensor, logger Logger, site Site, l
 			continue
 		}
 		if strings.Contains(lines[i], "Site Name") {
-			re := regexp.MustCompile(`Site\sName:\s+([^,\"]+)`)
+			re := regexp.MustCompile(`Site\sName:\s+([^#,\"]+)`)
 			td := re.FindStringSubmatch(lines[i])
 
 			site = Site{
@@ -30,43 +43,83 @@ func decInfoNomad(lines []string) (sensors []Sensor, logger Logger, site Site, l
 		if strings.Contains(lines[i], "TimeStamp") {
 			data := strings.Split(lines[i], ",")
 
-			ch := 1
-
 			for i := 1; i < len(data); i++ {
-				re := regexp.MustCompile(`^([^\(]+)\((.+)\)(\s+@\s+(\d+)m|)\-\s*(\d+)\s+(min|hour)\s+(Vec\s+|)(Average|Max\sValue|Min\sValue|Std\sDev)$`)
+				if len(data[i]) < 1 {
+					continue
+				}
+				re := regexp.MustCompile(`^([^\(]+)\((.+)\)(\s+@\s+(\d+)m|)\-\s*(\d+)\s+(min|hour)\s+(Vec\s+|)(Sample|Averag|Max\sValue|Min\sValue|Std\sDev)`)
 				td := re.FindStringSubmatch(data[i])
 
-				sensor := Sensor{
-					Channel: strconv.Itoa(ch),
-					Units:   td[2],
-					Value:   td[8],
+				sensor := NomadSensor{
+					Description: td[1],
+					Units:       td[2],
+					Cat:         td[8],
 				}
 
-				sensor.Height, err = strconv.ParseFloat(td[4], 64)
-				if err != nil {
-					return
+				if td[2] == "\xa1\xe3" {
+					sensor.Units = "deg"
+				}
+				if td[2] == "\xa1\xe3C" {
+					sensor.Units = "C"
 				}
 
-				sensors = append(sensors, sensor)
+				if len(td[4]) > 0 {
+					sensor.Height, err = strconv.ParseFloat(td[4], 64)
+					if err != nil {
+						return
+					}
+				}
+
+				sensorsN = append(sensorsN, sensor)
 			}
 
 			linesR = lines[i+1:]
 			break
 		}
 	}
+
+	sensors = getSfSN(sensorsN)
+
 	return
 }
 
-func decDataCh(lines []string, s []Sensor, dec func([]string, []Sensor, int, chan ChDecData)) (r []Data) {
+func getSfSN(sensorsN []NomadSensor) (s []Sensor) {
+	for _, v := range sensorsN {
+		if !existSN(s, v) {
+			st := Sensor{
+				Height:      v.Height,
+				Description: v.Description,
+				Units:       v.Units,
+				Channel:     strconv.Itoa(len(s) + 1),
+			}
+
+			s = append(s, st)
+		}
+	}
+
+	return
+}
+
+func existSN(s []Sensor, n NomadSensor) bool {
+	for _, v := range s {
+		if isSameNomadSensor(n, v) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func decDataNomadch(lines []string, s []NomadSensor, ss []Sensor) (r []Data) {
 	interval := 15000
 	length := int(math.Ceil(float64(len(lines)) / float64(interval)))
 
 	ch := make(chan ChDecData, length)
 	for i := 0; i < length-1; i++ {
 		start := i * interval
-		go dec(lines[start:start+interval], s, i, ch)
+		go decDataNomad(lines[start:start+interval], s, ss, i, ch)
 	}
-	go dec(lines[(length-1)*interval:], s, length-1, ch)
+	go decDataNomad(lines[(length-1)*interval:], s, ss, length-1, ch)
 
 	chData := map[int][]Data{}
 	for i := 0; i < length; i++ {
@@ -77,12 +130,12 @@ func decDataCh(lines []string, s []Sensor, dec func([]string, []Sensor, int, cha
 		r = append(r, chData[i]...)
 	}
 
-	// go saveRData(strconv.Itoa(g()), r, s)
+	go saveRData(strconv.Itoa(g()), r, ss)
 
 	return
 }
 
-func decDataNomad(lines []string, s []Sensor, index int, ch chan ChDecData) {
+func decDataNomad(lines []string, s []NomadSensor, sensors []Sensor, index int, ch chan ChDecData) {
 	chDecData := ChDecData{
 		index: index,
 	}
@@ -90,10 +143,16 @@ func decDataNomad(lines []string, s []Sensor, index int, ch chan ChDecData) {
 	var r []Data
 
 	for i := 0; i < len(lines); i++ {
+
 		data := strings.Split(lines[i], ",")
 
 		if len(data) < 4 {
 			// 非数据行
+			continue
+		}
+
+		re := regexp.MustCompile(`^(\"|)\d{4}[\-|\/]\d{1,2}[\-|\/]\d{1,2}(\"|)$`)
+		if re.MatchString(data[0]) {
 			continue
 		}
 
@@ -117,40 +176,28 @@ func decDataNomad(lines []string, s []Sensor, index int, ch chan ChDecData) {
 		}
 
 		for j, v := range s {
-			if v.Description == "No SCM Installed" {
-				continue
-			}
+			var channel string
+			var chs string
 
-			start := j*4 + 1
-			if start+3 >= len(data) {
-				continue
-			}
-			js := v.Channel
+			channel = getNomadCh(v, sensors)
 
-			tData["ChAvg"+js], chDecData.err = strconv.ParseFloat(data[start], 64)
-			if chDecData.err != nil {
-				Error("decDataSDR: ChAvg"+js, chDecData.err)
+			switch v.Cat {
+			case "Averag", "Sample": // Averag|Max\sValue|Min\sValue|Std\sDev
+				chs = "ChAvg" + channel
+			case "Max Value":
+				chs = "ChMax" + channel
+			case "Min Value":
+				chs = "ChMin" + channel
+			case "Std Dev":
+				chs = "ChSd" + channel
+			default:
+				chDecData.err = errors.New("decDataNomad: cat no match!")
 				ch <- chDecData
 				return
 			}
 
-			tData["ChSd"+js], chDecData.err = strconv.ParseFloat(data[start+1], 64)
+			tData[chs], chDecData.err = strconv.ParseFloat(strings.TrimSpace(data[j+1]), 64)
 			if chDecData.err != nil {
-				Error("decDataSDR: ChSd"+js, chDecData.err)
-				ch <- chDecData
-				return
-			}
-
-			tData["ChMax"+js], chDecData.err = strconv.ParseFloat(data[start+2], 64)
-			if chDecData.err != nil {
-				Error("decDataSDR: ChMax"+js, chDecData.err)
-				ch <- chDecData
-				return
-			}
-
-			tData["ChMin"+js], chDecData.err = strconv.ParseFloat(data[start+3], 64)
-			if chDecData.err != nil {
-				Error("decDataSDR: ChMin"+js, chDecData.err)
 				ch <- chDecData
 				return
 			}
@@ -162,4 +209,22 @@ func decDataNomad(lines []string, s []Sensor, index int, ch chan ChDecData) {
 	chDecData.data = r
 	ch <- chDecData
 }
-*/
+
+func getNomadCh(s NomadSensor, ss []Sensor) (ch string) {
+	for _, v := range ss {
+		if isSameNomadSensor(s, v) {
+			ch = v.Channel
+			return
+		}
+	}
+
+	return
+}
+
+func isSameNomadSensor(s1 NomadSensor, s2 Sensor) bool {
+	if s1.Height == s2.Height && s1.Description == s2.Description && s1.Units == s2.Units {
+		return true
+	}
+
+	return false
+}
