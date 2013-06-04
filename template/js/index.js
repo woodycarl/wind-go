@@ -30,6 +30,8 @@ function handleFileSelect(evt) {
 		reader.onload = function(event) {
 			//document.getElementById('content').textContent = event.target.result; 
 			var data = event.target.result.toString();
+
+			/*
 			var lines = data.split(/\r\n/);
 			var r = lines[0].split(/\t/);
 			var system = r[0];
@@ -43,6 +45,7 @@ function handleFileSelect(evt) {
 				$("#load_file_next").addClass("disabled");
 				return;
 			}
+			*/
 
 		};
 

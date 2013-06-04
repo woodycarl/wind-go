@@ -51,6 +51,8 @@ type Sensor struct {
 	Rations []Ration
 
 	NotInstalled bool
+
+	Value string
 }
 type Logger struct {
 	Model       string
