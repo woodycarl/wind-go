@@ -16,8 +16,11 @@ func HandleData(data [][]string, c Config) (r []Result, err error) {
 		r[i].S.AirDensity = c.AirDensity
 	}
 
-	r = linests(r)        // 计算线性相关
-	r = integrities(r, c) // 计算完整率
+	r = linests(r)             // 计算线性相关
+	r, err = integrities(r, c) // 计算完整率
+	if err != nil {
+		return
+	}
 
 	r, err = revises(r, c)
 	if err != nil {

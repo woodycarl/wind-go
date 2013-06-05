@@ -1,31 +1,42 @@
 package wind
 
 import (
+	"errors"
 	"math"
 	"time"
 
 	. "github.com/woodycarl/wind-go/logger"
 )
 
-func integrities(r []Result, c Config) []Result {
+func integrities(r []Result, c Config) (rr []Result, err error) {
 	Info("---Integrity---")
 	timeS := time.Now()
 
 	for i, v := range r {
-		r[i].S = integrity(v.S, v.D1, c)
+		r[i].S, err = integrity(v.S, v.D1, c)
+		if err != nil {
+			return
+		}
+
 		Info(r[i].ID, r[i].S.Cm[0].My, r[i].S.Cm[11].My)
 	}
 
 	Info("Integrity", time.Now().Sub(timeS))
-	return r
+
+	rr = r
+	return
 }
 
-func integrity(s Station, data []Data, c Config) Station {
+func integrity(s Station, data []Data, c Config) (ss Station, err error) {
 	s.Am = calErrs(s.Am, data, s.Sensors, c)
 
-	s.Cm = chooseOneYear(s.Am)
+	s.Cm, err = chooseOneYear(s.Am)
+	if err != nil {
+		return
+	}
 
-	return s
+	ss = s
+	return
 }
 
 /*
@@ -322,9 +333,10 @@ func countDays(year, month int) (days int) {
 	return
 }
 
-func chooseOneYear(am []Am) (cm []Am) {
+func chooseOneYear(am []Am) (cm []Am, err error) {
 	if len(am) < 12 {
-		Error("len am < 12")
+		err = errors.New("chooseOneYear: len am < 12")
+		return
 	}
 
 	choise := map[int]float64{}

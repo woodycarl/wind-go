@@ -10,8 +10,6 @@ import (
 	. "github.com/woodycarl/wind-go/logger"
 )
 
-var test = 0
-
 type ErrRTC struct {
 	id  string
 	cat string
@@ -580,34 +578,23 @@ func rCorrelation(r []Result, i int, cat string, iSensor int, sensor Sensor, err
 				}
 
 				if !b {
-					if test < 100 {
-						print(j, data[j]["Time"], chI, data[j]["ChAvg"+chI])
-					}
 
 					data[j]["ChAvg"+chI] = ration.Slope*d + ration.Intercept
-					if test < 100 {
-						println(data[j]["ChAvg"+chI])
-					}
+
 					continue
 				}
 			}
 
 			// 修订方法2，上下正常值的平均值
 			if j > 0 && j < len(errI)-1 && !errI[j-1] && !errI[j+1] {
-				if test < 100 {
-					print(j, data[j]["Time"], chI, data[j]["ChAvg"+chI])
-				}
+
 				data[j]["ChAvg"+chI] = (data[j-1]["ChAvg"+chI] + data[j+1]["ChAvg"+chI]) / 2
-				if test < 100 {
-					println(data[j]["ChAvg"+chI])
-				}
+
 				continue
 			}
 			// 3.
 
-			Warn("rRationality: not handle!", r[i].ID, "j")
-			//err = errors.New("rRationality:" + r[i].ID + " j ")
-			//return
+			Warn("rCorrelation: not handle!", r[i].ID, j)
 		}
 	}
 

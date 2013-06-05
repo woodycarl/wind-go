@@ -12,7 +12,7 @@ var filelist = {
 					file.lastModifiedDate.toLocaleDateString();
 
 		var type = "success";
-		if (file.type!="text/plain") {
+		if (file.type!="text/plain" && file.type!="application/vnd.ms-excel") {
 			type = "error";
 		}
 		
