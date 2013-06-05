@@ -37,6 +37,7 @@ func Main() {
 
 	r.HandleFunc("/result/{id}/turbs", handleTurbs)
 	r.HandleFunc("/result/{id}/windshear", handleWindshear)
+	r.HandleFunc("/result/{id}/weibull", handleWeibull)
 	r.HandleFunc("/result/{id}/windrose", handleWdvpWindRose)
 	r.HandleFunc("/result/{id}/wvp-freq", handleWvpFreq)
 	//r.HandleFunc("/result/{id}/turbine/wvp", handleTurbineWvp)

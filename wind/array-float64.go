@@ -41,6 +41,18 @@ func ArrayPow(array []float64, pow float64) (r []float64) {
 	return r
 }
 
+func ArraySv(array []float64) float64 {
+	avg := ArrayAvg(array)
+
+	var a []float64
+
+	for _, v := range array {
+		a = append(a, math.Pow(v-avg, 2))
+	}
+
+	return math.Sqrt(ArraySum(a) / float64(len(a)))
+}
+
 func ArrayTimeN(array []float64, n float64) (r []float64) {
 	for _, v := range array {
 		r = append(r, v*n)

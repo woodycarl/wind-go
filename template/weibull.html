@@ -1,0 +1,98 @@
+{{define "content"}}
+<!--  Weibull -->
+<div class="dig">
+	<div class="modal-header">
+		<h3>各高度风速威布尔分布图</h3>
+	</div>
+
+	<div class="modal-body">
+
+<div id="weibull">
+{{range $i, $v := .weibulls}}
+	<div id="weibull{{$i}}"></div>
+{{end}}
+</div>
+
+
+
+	</div>
+
+	<div class="modal-footer">
+		<div class="message"></div>
+	</div>
+</div><!-- / Weibull -->
+
+<script>
+$(document).ready(function(){
+{{range $i, $v := .weibulls}}
+	var weibull{{$i}} = {{toJson .}};
+
+	showWeibullFig({{$i}}, weibull{{$i}});
+{{end}}
+});
+
+function showWeibullFig(id,weibull) {
+	$('#weibull'+id).highcharts({
+			chart: {
+				zoomType: 'xy'
+			},
+			title: {
+				text: weibull.Title
+			},
+			subtitle: {
+				text: 'K:' + weibull.K + " C:" + weibull.C
+			},
+			xAxis: [{
+				categories: weibull.Cats
+			}],
+			yAxis: [{ // Primary yAxis
+				labels: {
+					format: '{value} %',
+					style: {
+						color: '#89A54E'
+					}
+				},
+				title: {
+					text: '频率',
+					style: {
+						color: '#89A54E'
+					}
+				}
+			}],
+			tooltip: {
+				shared: true
+			},
+			legend: {
+				layout: 'vertical',
+				align: 'right',
+				x: -20,
+				verticalAlign: 'top',
+				y: 100,
+				floating: true,
+				backgroundColor: '#FFFFFF'
+			},
+			series: [{
+				name: '风速频率',
+				color: '#4572A7',
+				type: 'column',
+				data: weibull.V,
+				tooltip: {
+					valueSuffix: ' %'
+				}
+			}, {
+				name: 'Weibull曲线',
+				color: '#89A54E',
+				type: 'spline',
+				marker: {
+					enabled: false
+				},
+				data: weibull.W,
+				tooltip: {
+					valueSuffix: ' %'
+				}
+			}]
+		});
+}
+
+</script>
+{{end}}
