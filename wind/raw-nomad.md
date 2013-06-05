@@ -1,6 +1,5 @@
 
 
-
 TimeStamp
 C1-SWI C3(m/s) @ 80m-10 min  Average
 C1-SWI C3(m/s) @ 80m-10 min  Max Value

@@ -103,6 +103,7 @@ func linest(v string, ir, is int, r []Result, ch chan ChLinestData) {
 		v:       v,
 		rations: rations,
 	}
+
 	ch <- chLinestData
 }
 

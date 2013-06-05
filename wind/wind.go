@@ -22,12 +22,11 @@ func HandleData(data [][]string, c Config) (r []Result, err error) {
 		return
 	}
 
-	r, err = revises(r, c)
+	r, err = revises(r, c) // 修订数据
 	if err != nil {
 		return
 	}
 
-	//r = revises(r, c)     // 修订数据
 	r = caculates(r, c) // 计算需要的数据
 
 	return

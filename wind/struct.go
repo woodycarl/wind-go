@@ -54,11 +54,13 @@ type Sensor struct {
 
 	Value string
 }
+
 type Logger struct {
 	Model       string
 	Serial      string
 	HardwareRev string
 }
+
 type Site struct {
 	Site          string
 	SiteDesc      string

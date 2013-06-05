@@ -21,7 +21,6 @@ func caculate(s Station, d1, d2, rd []Data, c Config) Station {
 	db := DB(rd)
 
 	// 空气密度
-
 	if v, ok := s.Sensors["t"]; ok {
 		chT := "ChAvg" + v[0].Channel
 		dataT := db.get(chT)[chT]
@@ -34,7 +33,6 @@ func caculate(s Station, d1, d2, rd []Data, c Config) Station {
 			s.AirDensity = AirDensity2(dataT, c.CalHeight)
 		}
 	}
-
 	Info("AirDensity:", s.AirDensity)
 
 	chTurbs := make(chan []float64)

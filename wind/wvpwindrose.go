@@ -24,6 +24,7 @@ func WvpWindrose(V, P []float64, arg WvpArg) (Ay []float64, wvF, wpF []float64) 
 	}
 
 	allNum := len(V)
+
 	allWp := 0.0
 	for _, v := range wpsums {
 		allWp = allWp + v

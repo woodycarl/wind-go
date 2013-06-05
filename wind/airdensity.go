@@ -19,7 +19,7 @@ func AirDensity(dataP, dataT []float64) float64 {
 }
 
 //	计算空气密度方法2：当没有气压数据时
-//	dataT 温度数据
+//	dataT  温度数据
 //	height 海拔高度
 func AirDensity2(dataT []float64, height float64) float64 {
 	T := ArrayAvg(dataT) + 273.0

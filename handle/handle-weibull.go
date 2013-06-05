@@ -12,11 +12,10 @@ import (
 
 type Weibull struct {
 	Title string
-	W     []float64
-	V     []float64
-	Cats  []int
-	K     float64
-	C     float64
+	W     [][]float64
+	V     [][]float64
+	K     string
+	C     string
 }
 
 func handleWeibull(w http.ResponseWriter, r *http.Request) {
@@ -41,33 +40,36 @@ func handleWeibull(w http.ResponseWriter, r *http.Request) {
 		k, c := wind.WeibullKC(wv)
 		Info(k, c)
 		wvf := wind.WvAvg(wv)
-		var dataW []float64
-		var dataV []float64
-		var cats []int
+		var dataW [][]float64
+		var dataV [][]float64
+
+		for i := 0.0; i < max; {
+			tw := []float64{i, 100.0 * wind.Weibull(k, c, i)}
+			dataW = append(dataW, tw)
+			i = i + 0.1
+		}
 
 		for i := 1; float64(i) < max; i++ {
 			index := strconv.Itoa(i)
-			dataW = append(dataW, 100.0*wind.Weibull(k, c, float64(i)-0.5))
 
 			if _, ok := wvf[index]; ok {
-				dataV = append(dataV, wvf[index])
+				dataV = append(dataV, []float64{float64(i) - 0.5, wvf[index]})
 			} else {
-				dataV = append(dataV, 0.0)
+				dataV = append(dataV, []float64{float64(i) - 0.5, 0.0})
 			}
 
-			cats = append(cats, i)
 		}
 
 		weibull := Weibull{
 			Title: "Ch" + ch + " " + fmt.Sprint(v.Height) + "m高度风速威布尔分布图",
 			W:     dataW,
 			V:     dataV,
-			K:     k,
-			C:     c,
-			Cats:  cats,
+			K:     fmt.Sprintf("%0.2f", k),
+			C:     fmt.Sprintf("%0.2f", c),
 		}
 
 		weibulls = append(weibulls, weibull)
+		break
 	}
 
 	page := Page{

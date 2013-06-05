@@ -8,8 +8,8 @@ type Data map[string]float64
 
 type DB []Data
 
-//	Filter|filter: 对数据行进行过滤
-//	str 过滤规则  列名 > | < |= | >= | <=, 默认 =
+//	Filter|filter  对数据行进行过滤
+//	str 过滤规则   列名 > | < |= | >= | <=, 默认 =
 //	val 规则对应值
 func (db DB) Filter(str string, val float64) DB {
 	return db.filter(str, val)

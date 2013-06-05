@@ -13,8 +13,6 @@
 {{end}}
 </div>
 
-
-
 	</div>
 
 	<div class="modal-footer">
@@ -39,23 +37,17 @@ function showWeibullFig(id,weibull) {
 			title: {
 				text: weibull.Title
 			},
-			subtitle: {
-				text: 'K:' + weibull.K + " C:" + weibull.C
-			},
-			xAxis: [{
-				categories: weibull.Cats
-			}],
-			yAxis: [{ // Primary yAxis
+			yAxis: [{
 				labels: {
 					format: '{value} %',
 					style: {
-						color: '#89A54E'
+						color: 'black'
 					}
 				},
 				title: {
 					text: '频率',
 					style: {
-						color: '#89A54E'
+						color: 'black'
 					}
 				}
 			}],
@@ -75,12 +67,13 @@ function showWeibullFig(id,weibull) {
 				name: '风速频率',
 				color: '#4572A7',
 				type: 'column',
+				pointWidth: 20,
 				data: weibull.V,
 				tooltip: {
 					valueSuffix: ' %'
 				}
 			}, {
-				name: 'Weibull曲线',
+				name: 'Weibull曲线<br />'+'K: '+weibull.K+'<br />'+'C: '+ weibull.C,
 				color: '#89A54E',
 				type: 'spline',
 				marker: {

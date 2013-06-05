@@ -673,6 +673,7 @@ func round(x float64, prec int) float64 {
 
 	return rounder / pow
 }
+
 func getNewDate(year, month, hours int) time.Time {
 	day := hours/24 + 1
 	hour := hours % 24

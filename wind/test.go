@@ -9,6 +9,8 @@ import (
 	. "github.com/woodycarl/wind-go/logger"
 )
 
+var g = getId()
+
 func writeLines(lines []string, path string) (err error) {
 	var (
 		file *os.File
@@ -67,5 +69,3 @@ func getId() func() int {
 		return i
 	}
 }
-
-var g = getId()
