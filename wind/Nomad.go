@@ -31,46 +31,103 @@ func decInfoNomad(lines []string) (sensorsN []NomadSensor, sensors []Sensor, log
 
 			continue
 		}
-		if strings.Contains(lines[i], "Site Name") {
-			re := regexp.MustCompile(`Site\sName:\s+([^#,\"]+)`)
-			td := re.FindStringSubmatch(lines[i])
 
-			site = Site{
-				Site: td[1],
+		if strings.Contains(lines[i], "Site Name") {
+			// 因字符串会应用于网址，去除特殊字符
+			reR := regexp.MustCompile(`#|\?|\/|%|&|=`) //|:
+			str := reR.ReplaceAllString(lines[i], "")
+
+			re := regexp.MustCompile(`Site\sName:\s+([^,\"]+)`)
+			if re.MatchString(str) {
+				td := re.FindStringSubmatch(str)
+
+				site = Site{
+					Site: td[1],
+				}
+				continue
+			}
+
+			err = errors.New("decInfoNomad: Site Name not match!")
+		}
+
+		if strings.Contains(lines[i], "Start Time") {
+			re := regexp.MustCompile(`Start\sTime:\s+(\d+\:\d+)\s(\d{4})[^\d]+(\d{1,2})[^\d]+(\d{1,2})[^\d]+`)
+			if re.MatchString(lines[i]) {
+				td := re.FindStringSubmatch(lines[i])
+				Info(site.Site, "Start Time:", td[2]+"/"+td[3]+"/"+td[4], td[1])
 			}
 			continue
 		}
+		if strings.Contains(lines[i], "Finish Time") {
+			re := regexp.MustCompile(`Finish\sTime:\s+(\d+\:\d+)\s(\d{4})[^\d]+(\d{1,2})[^\d]+(\d{1,2})[^\d]+`)
+			if re.MatchString(lines[i]) {
+				td := re.FindStringSubmatch(lines[i])
+				Info(site.Site, "Finish Time:", td[2]+"/"+td[3]+"/"+td[4], td[1])
+			}
+			continue
+		}
+		re1 := regexp.MustCompile(`(\d+)\sday[s]?\s(\d+)\shrs(\s(\d+)\smins)?`)
+		if re1.MatchString(lines[i]) {
+			td := re1.FindStringSubmatch(lines[i])
+
+			content := td[1]
+
+			if td[1] == "1" {
+				content = content + " Day"
+			} else {
+				content = content + " Days"
+			}
+
+			if td[2] == "1" {
+				content = content + " " + td[2] + " Hour"
+			} else {
+				content = content + " " + td[2] + " Hours"
+			}
+
+			if td[4] == "1" {
+				content = content + " " + td[4] + " Minute"
+			} else if td[4] != "" {
+				content = content + " " + td[4] + " Minutes"
+			}
+
+			Info(site.Site, content)
+			continue
+		}
+
 		if strings.Contains(lines[i], "TimeStamp") {
 			data := strings.Split(lines[i], ",")
 
 			for i := 1; i < len(data); i++ {
-				if len(data[i]) < 1 {
+				re := regexp.MustCompile(`^([^\(]+)\((.+)\)(\s+@\s+(\d+)m|)[^\-]*\-\s*(\d+)\s+(min|hour)\s+(Vec\s+|)(Sampl|Averag|Max\sValu|Min\sValu|Std\sDe|Time\sOf\sMa)`)
+
+				if re.MatchString(data[i]) {
+					td := re.FindStringSubmatch(data[i])
+
+					sensor := NomadSensor{
+						Description: td[1],
+						Units:       td[2],
+						Cat:         td[8],
+					}
+
+					if td[2] == "\xa1\xe3" {
+						sensor.Units = "deg"
+					}
+					if td[2] == "\xa1\xe3C" {
+						sensor.Units = "C"
+					}
+
+					if len(td[4]) > 0 {
+						sensor.Height, err = strconv.ParseFloat(td[4], 64)
+						if err != nil {
+							return
+						}
+					}
+
+					sensorsN = append(sensorsN, sensor)
 					continue
 				}
-				re := regexp.MustCompile(`^([^\(]+)\((.+)\)(\s+@\s+(\d+)m|)\-\s*(\d+)\s+(min|hour)\s+(Vec\s+|)(Sample|Averag|Max\sValue|Min\sValue|Std\sDev)`)
-				td := re.FindStringSubmatch(data[i])
 
-				sensor := NomadSensor{
-					Description: td[1],
-					Units:       td[2],
-					Cat:         td[8],
-				}
-
-				if td[2] == "\xa1\xe3" {
-					sensor.Units = "deg"
-				}
-				if td[2] == "\xa1\xe3C" {
-					sensor.Units = "C"
-				}
-
-				if len(td[4]) > 0 {
-					sensor.Height, err = strconv.ParseFloat(td[4], 64)
-					if err != nil {
-						return
-					}
-				}
-
-				sensorsN = append(sensorsN, sensor)
+				Info(site.Site, "Sensor End", data[i])
 			}
 
 			linesR = lines[i+1:]
@@ -130,8 +187,6 @@ func decDataNomadch(lines []string, s []NomadSensor, ss []Sensor) (r []Data) {
 		r = append(r, chData[i]...)
 	}
 
-	go saveRData(strconv.Itoa(g()), r, ss)
-
 	return
 }
 
@@ -153,7 +208,9 @@ func decDataNomad(lines []string, s []NomadSensor, sensors []Sensor, index int, 
 
 		re := regexp.MustCompile(`^(\"|)\d{4}[\-|\/]\d{1,2}[\-|\/]\d{1,2}(\"|)$`)
 		if re.MatchString(data[0]) {
-			continue
+			//continue
+			data[0] = strings.Replace(data[0], "\"", "", -1)
+			data[0] = data[0] + " 0:0:0"
 		}
 
 		var t time.Time
@@ -182,13 +239,13 @@ func decDataNomad(lines []string, s []NomadSensor, sensors []Sensor, index int, 
 			channel = getNomadCh(v, sensors)
 
 			switch v.Cat {
-			case "Averag", "Sample": // Averag|Max\sValue|Min\sValue|Std\sDev
+			case "Averag", "Sampl": // Averag|Max\sValue|Min\sValue|Std\sDev
 				chs = "ChAvg" + channel
-			case "Max Value":
+			case "Max Valu":
 				chs = "ChMax" + channel
-			case "Min Value":
+			case "Min Valu":
 				chs = "ChMin" + channel
-			case "Std Dev":
+			case "Std De":
 				chs = "ChSd" + channel
 			default:
 				chDecData.err = errors.New("decDataNomad: cat no match!")

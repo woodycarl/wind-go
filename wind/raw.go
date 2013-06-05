@@ -75,7 +75,7 @@ func decRaw(data [][]string) (r []Result, err error) {
 				err = errors.New(v.S.Site.Site + ": can not gen 1h data!")
 				return
 			}
-			Info(len(r[i].D1), "save D1")
+			Info("gen D1", len(r[i].D1))
 			// go saveRData(strconv.Itoa(g()), r[i].D1, r[i].S.SensorsR)
 		}
 
@@ -201,7 +201,6 @@ type ChDecData struct {
 
 func decodeDate(data string) (t time.Time, f float64, err error) {
 	var year, month, date, hour, minute int
-	var my string
 	location, _ := time.LoadLocation("Local")
 
 	re := regexp.MustCompile(`(\d{4})[\/|-](\d{1,2})[\/|-](\d{1,2})(\s\w+|)\s(\d{1,2}):(\d{1,2})(:\d{1,2}|)`)
@@ -232,8 +231,6 @@ func decodeDate(data string) (t time.Time, f float64, err error) {
 		if err != nil {
 			return
 		}
-
-		my = td[1] + td[2]
 	} else if re = regexp.MustCompile(`(\d{1,2})[\/|-](\d{1,2})[\/|-](\d{4})\s(\d{1,2}):(\d{1,2})(:\d{1,2}|)`); re.MatchString(data) {
 		td := re.FindStringSubmatch(data)
 
@@ -261,8 +258,6 @@ func decodeDate(data string) (t time.Time, f float64, err error) {
 		if err != nil {
 			return
 		}
-
-		my = td[3] + td[1]
 	} else {
 		err = errors.New("date format err" + data)
 		return
@@ -270,7 +265,7 @@ func decodeDate(data string) (t time.Time, f float64, err error) {
 
 	t = time.Date(year, time.Month(month), date, hour, minute, 0, 0, location)
 
-	f, err = strconv.ParseFloat(my, 64)
+	f, err = strconv.ParseFloat(t.Format("200601"), 64)
 	return
 }
 
@@ -291,6 +286,7 @@ func sensorClassify(sensorsR []Sensor) map[string]([]Sensor) {
 			"F":         "t",
 			"kPa":       "p",
 			"mb":        "p",
+			"mB":        "p",
 		}
 
 		sensor := units[v.Units]
@@ -384,7 +380,7 @@ func adjustR(r Result, ch chan ChAjustR) {
 		case "Degrees F", "F":
 			r.D1 = adjustRAdd(r.D1, v.Channel, -273.15)
 			r.D2 = adjustRAdd(r.D2, v.Channel, -273.15)
-		case "mb":
+		case "mb", "mB", "MB":
 			r.D1 = adjustRTimes(r.D1, v.Channel, 0.1)
 			r.D2 = adjustRTimes(r.D2, v.Channel, 0.1)
 		}
