@@ -19,7 +19,7 @@ func handleTurbs(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		handleErr(w, err)
 	}
-	s := data.Station
+	s := data.S
 
 	var turbs []TurbData
 

@@ -2,6 +2,12 @@ $(document).ready(function(){
 	$("#files").bind('change', handleFileSelect);
 	
 	$("#load_file_next").click(handleSubmit);
+
+	$("#set_revise").click(function(){
+		$('#set_revise').is(':checked') ? $("#data_revise").val("true") : $("#data_revise").val("false");
+
+		console.log($("#data_revise").val());
+	});
 });
 
 function handleFileSelect(evt) {

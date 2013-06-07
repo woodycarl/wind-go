@@ -25,9 +25,9 @@ func handleWeibull(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		handleErr(w, err)
 	}
-	s := data.Station
+	s := data.S
 
-	db := wind.DB(data.RData)
+	db := wind.DB(data.RD)
 
 	var weibulls []Weibull
 
@@ -69,7 +69,6 @@ func handleWeibull(w http.ResponseWriter, r *http.Request) {
 		}
 
 		weibulls = append(weibulls, weibull)
-		break
 	}
 
 	page := Page{

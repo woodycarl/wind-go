@@ -28,12 +28,12 @@ func handleContrast(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		handleErr(w, err)
 	}
-	s := data.Station
+	s := data.S
 
-	db := wind.DB(data.Data1h).Filter("Time >=", data.RData[0]["Time"]).Filter("Time <=", data.RData[len(data.RData)-1]["Time"])
+	db := wind.DB(data.D1).Filter("Time >=", data.RD[0]["Time"]).Filter("Time <=", data.RD[len(data.RD)-1]["Time"])
 
 	var ds []ContrastData
-	for _, v := range data.RData {
+	for _, v := range data.RD {
 		d := ContrastData{
 			Time: time.Unix(int64(v["Time"]), 0),
 		}

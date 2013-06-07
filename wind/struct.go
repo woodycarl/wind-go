@@ -6,6 +6,7 @@ type Config struct {
 	CalMethod   string  // notfuse | fuse
 	CalHeight   float64 //
 	AirDensity  float64
+	AutoRevise  bool
 }
 
 type Station struct {

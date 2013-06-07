@@ -20,6 +20,7 @@ func equal(a, b interface{}) bool {
 	}
 	return false
 }
+
 func addInt(a ...int) (r int) {
 	for _, v := range a {
 		r = r + v

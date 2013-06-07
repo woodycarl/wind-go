@@ -13,9 +13,9 @@ func handleResult(w http.ResponseWriter, r *http.Request) {
 	}
 	var results []Result
 
-	ds, _ := ioutil.ReadDir(OUTPUT_DIR)
+	dirs, _ := ioutil.ReadDir(OUTPUT_DIR)
 
-	for _, v := range ds {
+	for _, v := range dirs {
 		if v.IsDir() {
 			result := Result{
 				Id:   v.Name(),

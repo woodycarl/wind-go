@@ -7,7 +7,9 @@ import (
 	"strings"
 )
 
-var genID = generateID()
+var (
+	genID = generateID()
+)
 
 func generateID() func() string {
 	num := 0

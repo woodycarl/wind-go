@@ -17,7 +17,7 @@ func handleLinest(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		handleErr(w, err)
 	}
-	s := data.Station
+	s := data.S
 
 	var title string
 	switch cat {
@@ -57,7 +57,7 @@ func handleLinestFig(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		handleErr(w, err)
 	}
-	s := data.Station
+	s := data.S
 
 	var sensor wind.Sensor
 	for _, v := range s.Sensors[cat] {
@@ -68,7 +68,7 @@ func handleLinestFig(w http.ResponseWriter, r *http.Request) {
 
 	linests := []LinestFigData{}
 
-	db := wind.DB(data.Data1h)
+	db := wind.DB(data.D1)
 	d1 := db.Get("ChAvg" + ch1)["ChAvg"+ch1]
 	height1 := sensor.Height
 	for _, v := range sensor.Rations {

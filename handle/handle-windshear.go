@@ -24,7 +24,7 @@ func handleWindshear(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		handleErr(w, err)
 	}
-	s := data.Station
+	s := data.S
 
 	var points [][]float64
 	for i, v := range s.Wss.Height {

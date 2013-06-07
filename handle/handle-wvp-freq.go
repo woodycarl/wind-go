@@ -23,9 +23,9 @@ func handleWvpFreq(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		handleErr(w, err)
 	}
-	s := data.Station
+	s := data.S
 
-	db := wind.DB(data.RData)
+	db := wind.DB(data.RD)
 
 	var wvpFreDatas []WvpFreqData
 	for _, v := range s.Sensors["wv"] {

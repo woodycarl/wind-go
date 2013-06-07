@@ -170,32 +170,39 @@ func decDataSDR(lines []string, s []Sensor, index int, ch chan ChDecData) {
 			}
 			js := v.Channel
 
-			tData["ChAvg"+js], chDecData.err = strconv.ParseFloat(data[start], 64)
-			if chDecData.err != nil {
-				Error("decDataSDR: ChAvg"+js, chDecData.err)
-				ch <- chDecData
-				return
+			if data[start] != "" {
+				tData["ChAvg"+js], chDecData.err = strconv.ParseFloat(data[start], 64)
+				if chDecData.err != nil {
+					Error("decDataSDR: ChAvg"+js, chDecData.err)
+					ch <- chDecData
+					return
+				}
 			}
 
-			tData["ChSd"+js], chDecData.err = strconv.ParseFloat(data[start+1], 64)
-			if chDecData.err != nil {
-				Error("decDataSDR: ChSd"+js, chDecData.err)
-				ch <- chDecData
-				return
+			if data[start+1] != "" {
+				tData["ChSd"+js], chDecData.err = strconv.ParseFloat(data[start+1], 64)
+				if chDecData.err != nil {
+					Error("decDataSDR: ChSd"+js, chDecData.err)
+					ch <- chDecData
+					return
+				}
 			}
 
-			tData["ChMax"+js], chDecData.err = strconv.ParseFloat(data[start+2], 64)
-			if chDecData.err != nil {
-				Error("decDataSDR: ChMax"+js, chDecData.err)
-				ch <- chDecData
-				return
+			if data[start+2] != "" {
+				tData["ChMax"+js], chDecData.err = strconv.ParseFloat(data[start+2], 64)
+				if chDecData.err != nil {
+					Error("decDataSDR: ChMax"+js, chDecData.err)
+					ch <- chDecData
+					return
+				}
 			}
-
-			tData["ChMin"+js], chDecData.err = strconv.ParseFloat(data[start+3], 64)
-			if chDecData.err != nil {
-				Error("decDataSDR: ChMin"+js, chDecData.err)
-				ch <- chDecData
-				return
+			if data[start+3] != "" {
+				tData["ChMin"+js], chDecData.err = strconv.ParseFloat(data[start+3], 64)
+				if chDecData.err != nil {
+					Error("decDataSDR: ChMin"+js, chDecData.err)
+					ch <- chDecData
+					return
+				}
 			}
 		}
 

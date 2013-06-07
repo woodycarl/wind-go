@@ -15,6 +15,13 @@ import (
 )
 
 func handleData(w http.ResponseWriter, r *http.Request) {
+
+	if r.FormValue("data_revise") == "false" {
+		config.Config.AutoRevise = false
+	} else {
+		config.Config.AutoRevise = true
+	}
+
 	r.ParseMultipartForm(32 << 20) // 32MB is the default used by FormFile
 	files := r.MultipartForm.File["files"]
 
@@ -51,12 +58,12 @@ func handleData(w http.ResponseWriter, r *http.Request) {
 	for _, v := range res {
 		id := genID() + "-" + v.S.Site.Site
 		data := Data{
-			Id:      id,
-			ID:      v.ID,
-			Station: v.S,
-			Data1h:  v.D1,
-			Data10m: v.D2,
-			RData:   v.RD,
+			Id: id,
+			ID: v.ID,
+			S:  v.S,
+			D1: v.D1,
+			D2: v.D2,
+			RD: v.RD,
 		}
 
 		addData(data)

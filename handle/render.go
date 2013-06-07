@@ -16,12 +16,12 @@ func (page *Page) render(file string, w http.ResponseWriter) {
 	)
 
 	if err != nil {
-		// serveError(w, err)
+		handleErr(w, err)
 		return
 	}
 
 	if err = tmpl.Execute(w, page); err != nil {
-		// serveError(w, err)
+		handleErr(w, err)
 		return
 	}
 }

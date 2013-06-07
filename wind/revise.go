@@ -54,6 +54,11 @@ func revises(r []Result, c Config) (rr []Result, err error) {
 		}
 	}
 
+	if !c.AutoRevise {
+		rr = r
+		return
+	}
+
 	// 2.合理性修订
 	var errsR []ErrRTC
 	catsR := []string{"wv", "wd"}

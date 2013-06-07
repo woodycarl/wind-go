@@ -14,7 +14,7 @@ func handleInfo(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		handleErr(w, err)
 	}
-	s := data.Station
+	s := data.S
 
 	page := Page{
 		"id": id,

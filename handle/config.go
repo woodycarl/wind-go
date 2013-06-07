@@ -30,6 +30,7 @@ func getJsonConfig() (config Config) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	err = json.Unmarshal(configFile, &config)
 	if err != nil {
 		log.Fatal(err)

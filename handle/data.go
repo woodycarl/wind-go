@@ -9,17 +9,21 @@ import (
 	"github.com/woodycarl/wind-go/wind"
 )
 
-var datas []Data
+var (
+	datas []Data
+)
 
-const OUTPUT_DIR = "./output/"
+const (
+	OUTPUT_DIR = "./output/"
+)
 
 type Data struct {
-	Id      string
-	ID      string
-	Station wind.Station
-	Data1h  []wind.Data
-	Data10m []wind.Data
-	RData   []wind.Data
+	Id string
+	ID string
+	S  wind.Station
+	D1 []wind.Data
+	D2 []wind.Data
+	RD []wind.Data
 }
 
 func getData(id string) (data Data, err error) {
