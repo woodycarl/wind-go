@@ -28,6 +28,7 @@ function Message (type, content, id) {
 	this.id = id;
 	this.content = '<div id="'+this.id+'" class="alert alert-block alert-'+type+' fade in">'+content+'</div>';
 }
+
 Message.prototype.autohide = function(time) {
 	if (typeof(time)=="undefined") {
 		time = 3000;
@@ -35,6 +36,7 @@ Message.prototype.autohide = function(time) {
 	setTimeout("$('#"+this.id+"').addClass('hidden')", time);
 	return this;
 }
+
 Message.prototype.show = function(id) {
 	$(id).html(this.content);
 	return this;

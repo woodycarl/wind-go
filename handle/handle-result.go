@@ -13,13 +13,24 @@ func handleResult(w http.ResponseWriter, r *http.Request) {
 	}
 	var results []Result
 
-	dirs, _ := ioutil.ReadDir(OUTPUT_DIR)
+	if config.Result == "dir" {
+		dirs, _ := ioutil.ReadDir(OUTPUT_DIR)
 
-	for _, v := range dirs {
-		if v.IsDir() {
+		for _, v := range dirs {
+			if v.IsDir() {
+				result := Result{
+					Id:   v.Name(),
+					Date: v.ModTime(),
+				}
+
+				results = append(results, result)
+			}
+		}
+	} else {
+		for _, v := range datas {
 			result := Result{
-				Id:   v.Name(),
-				Date: v.ModTime(),
+				Id:   v.Id,
+				Date: v.T,
 			}
 
 			results = append(results, result)
@@ -27,7 +38,8 @@ func handleResult(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page := Page{
-		"results": results,
+		"results":        results,
+		"hideResultMenu": true,
 	}
 
 	page.render("result", w)

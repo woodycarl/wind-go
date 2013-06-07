@@ -19,7 +19,6 @@ type NomadSensor struct {
 }
 
 func decInfoNomad(lines []string) (sensorsN []NomadSensor, sensors []Sensor, logger Logger, site Site, linesR []string, err error) {
-
 	for i := 0; i < len(lines); i++ {
 		if strings.Contains(lines[i], "Nomad2 Name") {
 			re := regexp.MustCompile(`Nomad2\sName:(\d+)`)

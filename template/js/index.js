@@ -6,8 +6,26 @@ $(document).ready(function(){
 	$("#set_revise").click(function(){
 		$('#set_revise').is(':checked') ? $("#data_revise").val("true") : $("#data_revise").val("false");
 
-		console.log($("#data_revise").val());
+		console.log("data_revise", $("#data_revise").val());
 	});
+
+	$("#set_result_dir").click(function(){
+		$("#data_result").val(this.value);
+
+		console.log("data_result", $("#data_result").val());
+	});
+	$("#set_result_mem").click(function(){
+		$("#data_result").val(this.value);
+
+		console.log("data_result", $("#data_result").val());
+	});
+
+	$("#set_max_num").change(function(){
+		$("#data_max_num").val(this.value);
+
+		console.log("data_max_num", $("#data_max_num").val());
+	});
+
 });
 
 function handleFileSelect(evt) {
@@ -35,9 +53,9 @@ function handleFileSelect(evt) {
 		/* onLoad event is fired when the load completes. */
 		reader.onload = function(event) {
 			//document.getElementById('content').textContent = event.target.result; 
+			/*
 			var data = event.target.result.toString();
 
-			/*
 			var lines = data.split(/\r\n/);
 			var r = lines[0].split(/\t/);
 			var system = r[0];

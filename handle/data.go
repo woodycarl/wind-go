@@ -19,6 +19,7 @@ const (
 
 type Data struct {
 	Id string
+	T  time.Time
 	ID string
 	S  wind.Station
 	D1 []wind.Data
@@ -58,8 +59,9 @@ func getData2(id string) (data Data, err error) {
 }
 
 func addData(data Data) {
-	if len(datas) > 4 {
+	if len(datas) > config.MaxNumInMem {
 		datas = datas[1:]
 	}
+
 	datas = append(datas, data)
 }

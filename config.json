@@ -1,11 +1,14 @@
 {
 	"Port":	"8888",
+	"Result": "mem",
+	"MaxNumInMem": 5,
 
 	"Config": {
 		"AllowMinMax": false,
 		"RlostMethod": "avg",
 		"CalMethod": "fuse",
 		"CalHeight": 80,
-		"AirDensity": 1.18
+		"AirDensity": 1.18,
+		"AutoRevise": true
 	}
 }

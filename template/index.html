@@ -14,6 +14,8 @@
 			</span>
 
 			<input type="text" id="data_revise" name="data_revise" class="hidden">
+			<input type="text" id="data_result" name="data_result" class="hidden">
+			<input type="text" id="data_max_num" name="data_max_num" class="hidden">
 
 			<input type="submit" value="上载" id="file-submit" class="hidden">
 		</form>
@@ -40,26 +42,31 @@
 
 
 <form class="index-setting form-horizontal">
-	<!--
 	<div class="control-group">
-		<label class="control-label" for="inputEmail">Email</label>
+		<label class="control-label">显示结果</label>
 		<div class="controls">
-			<input type="text" id="inputEmail" placeholder="Email">
+
+		<label class="radio">
+		  <input id="set_result_dir" type="radio" {{if equal .config.Result "dir"}}checked="checked"{{end}} name="Result" value="dir" />目录
+		</label>
+		<label class="radio">
+		  <input id="set_result_mem" type="radio" {{if equal .config.Result "mem"}}checked="checked"{{end}} name="Result" value="mem" />内存
+		</label>
 		</div>
 	</div>
 
 	<div class="control-group">
-		<label class="control-label" for="inputPassword">Password</label>
+		<label class="control-label" for="set_max_num">显示最多结果条数</label>
 		<div class="controls">
-			<input type="password" id="inputPassword" placeholder="Password">
+			<input type="text" id="set_max_num" placeholder="结果条数" value="{{.config.MaxNumInMem}}">
 		</div>
 	</div>
--->
+
 
 	<div class="control-group">
 		<div class="controls">
 			<label class="checkbox">
-				<input id="set_revise" type="checkbox" checked="true"/> 自动修正
+				<input id="set_revise" type="checkbox" {{if .config.Config.AutoRevise}}checked="true"{{end}}/> 自动修正
 			</label>
 		</div>
 	</div>
