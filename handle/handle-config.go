@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 
+	. "github.com/woodycarl/wind-go/logger"
 	"github.com/woodycarl/wind-go/wind"
 )
 
@@ -56,24 +57,30 @@ func getJsonConfig() (config Config) {
 	return
 }
 
-func handleConfig(r *http.Request) {
-	if r.FormValue("data_revise") == "false" {
+func handleConfig(w http.ResponseWriter, r *http.Request) {
+	switch r.FormValue("data_revise") {
+	case "false":
 		config.Config.AutoRevise = false
-	} else {
+		Info("Config: AutoRevise", false)
+	case "true":
 		config.Config.AutoRevise = true
+		Info("Config: AutoRevise", true)
 	}
 
-	if r.FormValue("data_result") == "dir" {
+	switch r.FormValue("data_result") {
+	case "dir":
 		config.Result = "dir"
-	} else {
+		Info("Config: Result dir")
+	case "mem":
 		config.Result = "mem"
+		Info("Config: Result mem")
 	}
 
-	max, err := strconv.Atoi(r.FormValue("data_max_num"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	if max > 0 {
-		config.MaxNumInMem = max
+	if maxNumS := r.FormValue("data_max_num"); maxNumS != "" {
+		max, err := strconv.Atoi(maxNumS)
+		if err == nil && max > 0 {
+			config.MaxNumInMem = max
+			Info("Config: MaxNumInMem", max)
+		}
 	}
 }

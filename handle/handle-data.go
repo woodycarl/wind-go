@@ -15,8 +15,6 @@ import (
 )
 
 func handleData(w http.ResponseWriter, r *http.Request) {
-	handleConfig(r)
-
 	r.ParseMultipartForm(32 << 20) // 32MB is the default used by FormFile
 	files := r.MultipartForm.File["files"]
 

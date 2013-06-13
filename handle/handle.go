@@ -25,6 +25,7 @@ func Main() {
 	r.HandleFunc("/", handleIndex)
 	r.HandleFunc("/data", handleData)
 	r.HandleFunc("/result", handleResult)
+	r.HandleFunc("/config", handleConfig)
 
 	r.HandleFunc("/result/{id}/{cat:info-site|info-logger|info-sensors}", handleInfo)
 	r.HandleFunc("/result/{id}/{cat:integrity|integrity-all}", handleInfo)

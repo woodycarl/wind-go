@@ -4,26 +4,18 @@ $(document).ready(function(){
 	$("#load_file_next").click(handleSubmit);
 
 	$("#set_revise").click(function(){
-		$('#set_revise').is(':checked') ? $("#data_revise").val("true") : $("#data_revise").val("false");
-
-		console.log("data_revise", $("#data_revise").val());
+		$.post("/config", { data_revise: $('#set_revise').is(':checked') } );
 	});
 
 	$("#set_result_dir").click(function(){
-		$("#data_result").val(this.value);
-
-		console.log("data_result", $("#data_result").val());
+		$.post("/config", { data_result: this.value } );
 	});
 	$("#set_result_mem").click(function(){
-		$("#data_result").val(this.value);
-
-		console.log("data_result", $("#data_result").val());
+		$.post("/config", { data_result: this.value } );
 	});
 
 	$("#set_max_num").change(function(){
-		$("#data_max_num").val(this.value);
-
-		console.log("data_max_num", $("#data_max_num").val());
+		$.post("/config", { data_max_num: this.value } );
 	});
 
 });
@@ -32,14 +24,6 @@ function handleFileSelect(evt) {
 	var files = evt.target.files;
 
 	$("#file_list").html("");
-
-	/*
-	if (files.length%2 != 0) {
-		new Message("error", "同时需要1小时和10分钟数据文件！").show("#load_file .message").autohide();
-		$("#load_file_next").addClass("disabled");
-		return
-	}
-	*/
 
 	for (var i=0; i<files.length; i++) {
 		var file = files[i];
@@ -53,23 +37,22 @@ function handleFileSelect(evt) {
 		/* onLoad event is fired when the load completes. */
 		reader.onload = function(event) {
 			//document.getElementById('content').textContent = event.target.result; 
-			/*
+			
 			var data = event.target.result.toString();
 
-			var lines = data.split(/\r\n/);
-			var r = lines[0].split(/\t/);
-			var system = r[0];
+			if (file.type==="text/plain" || file.type==="application/vnd.ms-excel") {
+				var lines = data.split(/\r\n/);
+				var title = lines[0];
+				console.log(title);
 
-			var info = {
-				"SDR": true
+				//title.indexof("SDR") !=-1 || title.indexof("Multi-Track Export") != -1
+				if  (contains(title, "SDR") || contains(title, "Multi-Track Export")) {
+					return
+				}
 			}
 
-			if (typeof(info[system])=="undefined") {
-				new Message("error", "格式不符的数据文件！").show("#load_file .message").autohide();
-				$("#load_file_next").addClass("disabled");
-				return;
-			}
-			*/
+			new Message("error", "格式不符的数据文件！").show("#load_file .message").autohide();
+			$("#load_file_next").addClass("disabled");
 
 		};
 
@@ -86,4 +69,27 @@ function handleSubmit() {
 	}
 
 	$("#file-submit").click();
+}
+
+/*
+*string:原始字符串
+*substr:子字符串
+*isIgnoreCase:忽略大小写
+*/
+
+function contains(string,substr,isIgnoreCase){
+	if(isIgnoreCase)	{
+		string=string.toLowerCase();
+		substr=substr.toLowerCase();
+	}
+	var startChar=substr.substring(0,1);
+	var strLen=substr.length;
+	for(var j=0;j<string.length-strLen+1;j++)	{
+		if(string.charAt(j)==startChar){
+			if(string.substring(j,j+strLen)==substr){
+				return true;
+			}
+		}
+	}
+	return false;
 }

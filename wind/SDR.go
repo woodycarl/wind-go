@@ -214,5 +214,10 @@ func decDataSDR(lines []string, s []Sensor, index int, ch chan ChDecData) {
 }
 
 func getLineStr(str string) string {
-	return strings.Split(str, "\t")[1]
+	s := strings.Split(str, "\t")
+	if len(s) < 2 {
+		return ""
+	}
+
+	return s[1]
 }
