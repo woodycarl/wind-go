@@ -29,7 +29,7 @@ func getErrRTC(errs []ErrRTC, id, cat string, index int) (e []bool, err error) {
 	}
 
 	if e == nil {
-		err = errors.New("getErrRTC: get none!")
+		err = errors.New("getErrRTC: none get!")
 		return
 	}
 

@@ -5,7 +5,7 @@ import (
 )
 
 func HandleData(data [][]string, c Config) (r []Result, err error) {
-	Info("HandleData")
+	Info("Handle Data")
 
 	r, err = decRaw(data)
 	if err != nil {
