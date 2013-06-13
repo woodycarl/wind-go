@@ -7,6 +7,7 @@ type Config struct {
 	CalHeight   float64 //
 	AirDensity  float64
 	AutoRevise  bool
+	Separate    bool
 }
 
 type Station struct {

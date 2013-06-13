@@ -9,6 +9,7 @@
 		"CalMethod": "fuse",
 		"CalHeight": 80,
 		"AirDensity": 1.18,
-		"AutoRevise": true
+		"AutoRevise": true,
+		"Separate": true
 	}
 }

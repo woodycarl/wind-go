@@ -7,10 +7,7 @@ $(document).ready(function(){
 		$.post("/config", { data_revise: $('#set_revise').is(':checked') } );
 	});
 
-	$("#set_result_dir").click(function(){
-		$.post("/config", { data_result: this.value } );
-	});
-	$("#set_result_mem").click(function(){
+	$("input[name='Result']").click(function(){
 		$.post("/config", { data_result: this.value } );
 	});
 
@@ -18,6 +15,9 @@ $(document).ready(function(){
 		$.post("/config", { data_max_num: this.value } );
 	});
 
+	$("input[name='Separate']").click(function(){
+		$.post("/config", { data_separate: this.value } );
+	});
 });
 
 function handleFileSelect(evt) {
@@ -53,7 +53,6 @@ function handleFileSelect(evt) {
 
 			new Message("error", "格式不符的数据文件！").show("#load_file .message").autohide();
 			$("#load_file_next").addClass("disabled");
-
 		};
 
 		/* The readAsText method will read the file's data as a text string. By default the string is decoded as 'UTF-8'. */

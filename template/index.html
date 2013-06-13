@@ -43,10 +43,10 @@
 		<div class="controls">
 
 		<label class="radio">
-		  <input id="set_result_dir" type="radio" {{if equal .config.Result "dir"}}checked="checked"{{end}} name="Result" value="dir" />目录
+		  <input type="radio" {{if equal .config.Result "dir"}}checked="checked"{{end}} name="Result" value="dir" />目录
 		</label>
 		<label class="radio">
-		  <input id="set_result_mem" type="radio" {{if equal .config.Result "mem"}}checked="checked"{{end}} name="Result" value="mem" />内存
+		  <input type="radio" {{if equal .config.Result "mem"}}checked="checked"{{end}} name="Result" value="mem" />内存
 		</label>
 		</div>
 	</div>
@@ -66,6 +66,20 @@
 			</label>
 		</div>
 	</div>
+
+	<div class="control-group">
+		<label class="control-label">多个站点时</label>
+		<div class="controls">
+
+		<label class="radio">
+		  <input type="radio" {{if not .config.Config.Separate}}checked="checked"{{end}} name="Separate" value="false" />计算相关
+		</label>
+		<label class="radio">
+		  <input type="radio" {{if .config.Config.Separate}}checked="checked"{{end}} name="Separate" value="true" />分开计算
+		</label>
+		</div>
+	</div>
+
 </form>
 
 

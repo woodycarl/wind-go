@@ -149,23 +149,16 @@ func DecodeData(lines []string, ch chan RawData) {
 	case strings.Contains(lines[0], "SDR"):
 		s.System = "SDR"
 		s.Version = strings.Fields(lines[0])[1]
-	case strings.Contains(lines[0], "Multi-Track Export -"):
-		s.System = "Nomad2"
-	default:
-		chData.err = errors.New("DecodeData: file system format err!")
-		ch <- chData
-		return
-	}
 
-	switch s.System {
-	case "SDR":
 		s.SensorsR, s.Logger, s.Site, linesR, chData.err = decInfoSDR(lines)
 		if chData.err != nil {
 			ch <- chData
 			return
 		}
 		data = decDataSDRch(linesR, s.SensorsR)
-	case "Nomad2":
+	case strings.Contains(lines[0], "Multi-Track Export -"):
+		s.System = "Nomad2"
+
 		var ss []NomadSensor
 		ss, s.SensorsR, s.Logger, s.Site, linesR, chData.err = decInfoNomad(lines)
 		if chData.err != nil {
@@ -173,9 +166,8 @@ func DecodeData(lines []string, ch chan RawData) {
 			return
 		}
 		data = decDataNomadch(linesR, ss, s.SensorsR)
-
 	default:
-		chData.err = errors.New("DecodeData: system not surport!")
+		chData.err = errors.New("DecodeData: file system format err!")
 		ch <- chData
 		return
 	}

@@ -61,10 +61,10 @@ func handleConfig(w http.ResponseWriter, r *http.Request) {
 	switch r.FormValue("data_revise") {
 	case "false":
 		config.Config.AutoRevise = false
-		Info("Config: AutoRevise", false)
+		Info("Config: AutoRevise false")
 	case "true":
 		config.Config.AutoRevise = true
-		Info("Config: AutoRevise", true)
+		Info("Config: AutoRevise true")
 	}
 
 	switch r.FormValue("data_result") {
@@ -74,6 +74,15 @@ func handleConfig(w http.ResponseWriter, r *http.Request) {
 	case "mem":
 		config.Result = "mem"
 		Info("Config: Result mem")
+	}
+
+	switch r.FormValue("data_separate") {
+	case "false":
+		config.Config.Separate = false
+		Info("Config: Separate false")
+	case "true":
+		config.Config.Separate = true
+		Info("Config: Separate true")
 	}
 
 	if maxNumS := r.FormValue("data_max_num"); maxNumS != "" {
