@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	. "github.com/woodycarl/wind-go/logger"
 	"github.com/woodycarl/wind-go/wind"
 )
 
@@ -57,7 +56,6 @@ func handleWeibull(w http.ResponseWriter, r *http.Request) {
 			} else {
 				dataV = append(dataV, []float64{float64(i) - 0.5, 0.0})
 			}
-
 		}
 
 		weibull := Weibull{

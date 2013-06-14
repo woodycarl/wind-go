@@ -1,12 +1,6 @@
 package wind
 
-import (
-	. "github.com/woodycarl/wind-go/logger"
-)
-
 func HandleData(data [][]string, c Config) (r []Result, err error) {
-	Info("Handle Data")
-
 	r, err = decRaw(data)
 	if err != nil {
 		return

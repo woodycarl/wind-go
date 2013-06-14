@@ -5,10 +5,16 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/woodycarl/wind-go/logger"
 )
 
 var (
 	genID = generateID()
+	Info  = logger.Info
+	Warn  = logger.Warn
+	Debug = logger.Debug
+	Error = logger.Error
 )
 
 func generateID() func() string {

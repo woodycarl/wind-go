@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	. "github.com/woodycarl/wind-go/logger"
 )
 
 type RawData struct {

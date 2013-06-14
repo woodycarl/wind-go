@@ -2,8 +2,6 @@ package wind
 
 import (
 	"time"
-
-	. "github.com/woodycarl/wind-go/logger"
 )
 
 type ChLinestData struct {

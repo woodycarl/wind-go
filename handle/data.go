@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"time"
 
-	. "github.com/woodycarl/wind-go/logger"
 	"github.com/woodycarl/wind-go/wind"
 )
 
@@ -14,7 +13,13 @@ var (
 )
 
 const (
-	OUTPUT_DIR = "./output/"
+	OUTPUT_DIR         = "./output/"
+	WVPT_DATE_FORMAT   = "2006010215"
+	WVPT_FILE_NAME     = "data-wvd.txt"
+	RD_FILE_NAME       = "data-r.txt"
+	CONTRAST_FILE_NAME = "data-c.txt"
+	DATA_DATE_FORMAT   = "2006/01/02 15:04:05"
+	DATA_FILE_NAME     = "data.txt"
 )
 
 type Data struct {
@@ -44,7 +49,7 @@ func getData(id string) (data Data, err error) {
 func getData2(id string) (data Data, err error) {
 	var datafile []byte
 
-	datafile, err = ioutil.ReadFile(OUTPUT_DIR + id + "/data.txt")
+	datafile, err = ioutil.ReadFile(OUTPUT_DIR + id + "/" + DATA_FILE_NAME)
 	if err != nil {
 		return
 	}

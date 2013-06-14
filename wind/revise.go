@@ -6,8 +6,6 @@ import (
 	"math/rand"
 	"strconv"
 	"time"
-
-	. "github.com/woodycarl/wind-go/logger"
 )
 
 type ErrRTC struct {

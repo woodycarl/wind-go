@@ -10,11 +10,13 @@ import (
 	"os"
 	"time"
 
-	. "github.com/woodycarl/wind-go/logger"
 	"github.com/woodycarl/wind-go/wind"
 )
 
 func handleData(w http.ResponseWriter, r *http.Request) {
+	Info("=== Handle Data ===")
+	timeS := time.Now()
+
 	r.ParseMultipartForm(32 << 20) // 32MB is the default used by FormFile
 	files := r.MultipartForm.File["files"]
 
@@ -70,6 +72,8 @@ func handleData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/result", http.StatusFound)
+
+	Info("=== End Handle Data", time.Now().Sub(timeS), "===")
 }
 
 func saveWvptData(id string, ts, wv, wd []float64) {
@@ -82,13 +86,13 @@ func saveWvptData(id string, ts, wv, wd []float64) {
 
 	var lines []string
 	for i, v := range ts {
-		t := time.Unix(int64(v), 0).Format("2006010215")
+		t := time.Unix(int64(v), 0).Format(WVPT_DATE_FORMAT)
 
 		line := t + "\t" + fmt.Sprint(wv[i]) + "\t" + fmt.Sprint(wd[i])
 		lines = append(lines, line)
 	}
 
-	err := writeLines(lines, OUTPUT_DIR+id+"/data-wvd.txt")
+	err := writeLines(lines, OUTPUT_DIR+id+"/"+WVPT_FILE_NAME)
 	if err != nil {
 		Error("saveWvptData", err)
 		return
@@ -101,7 +105,7 @@ func saveRData(id string, data []wind.Data, s wind.Station) {
 	timeS := time.Now()
 
 	if len(data) < 8000 {
-		Error("saveRData\tnot enough data!")
+		Error("saveRData not enough data!")
 		return
 	}
 
@@ -120,7 +124,7 @@ func saveRData(id string, data []wind.Data, s wind.Station) {
 	for _, v1 := range data {
 		t := time.Unix(int64(v1["Time"]), 0)
 		line := ""
-		line = line + t.Format("2006/01/02 15:04:05")
+		line = line + t.Format(DATA_DATE_FORMAT)
 
 		for _, v2 := range s.SensorsR {
 			ch := v2.Channel
@@ -133,7 +137,7 @@ func saveRData(id string, data []wind.Data, s wind.Station) {
 		lines = append(lines, line)
 	}
 
-	err := writeLines(lines, OUTPUT_DIR+id+"/data-r.txt")
+	err := writeLines(lines, OUTPUT_DIR+id+"/"+RD_FILE_NAME)
 	if err != nil {
 		Error("saveRData", err)
 		return
@@ -147,11 +151,11 @@ func saveData(data Data) {
 
 	b, err := json.Marshal(data)
 	if err != nil {
-		Error("saveData:", err)
+		Error("saveData", err)
 		return
 	}
 
-	f, err := os.Create(OUTPUT_DIR + data.Id + "/data.txt")
+	f, err := os.Create(OUTPUT_DIR + data.Id + "/" + DATA_FILE_NAME)
 	if err != nil {
 		Error("saveData", err)
 	}

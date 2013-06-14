@@ -76,7 +76,7 @@
 	<a class="dropdown-toggle" data-toggle="dropdown" href="#">频率分布 <b class="caret"></b></a>
 	<ul class="dropdown-menu">
 	<li><a href="/result/{{.id}}/wvp-freq"><code>风速、风能频率分布</code>(不同高度|代表年)</a></li>
-	<li><a href="/result/{{.id}}/windrose"><code>风向、风能频率分布玫瑰图</code></a></li>
+	
 	<li><a href="/result/{{.id}}/weibull"><code>威布尔曲线图</code>(不同高度|代表年)</a></li>
 	</ul>
 </li>
@@ -85,12 +85,9 @@
 	<a class="dropdown-toggle" data-toggle="dropdown" href="#">轮毂高度数据 <b class="caret"></b></a>
 	<ul class="dropdown-menu">
 	<li><a href="/result/{{.id}}/wvp-avg/turb"><code>平均风速风功率</code></a></li>
-	<li><a href="#">风速风功率</a></li>
-	<li><a href="#">代表年平均风向频率、风能密度方向分布</a></li>
-	<li><a href="#">代表年风频曲线及威布尔参数</a></li>
-	<li><a href="#">代表年平均风速日变化和年变化</a></li>
-	<li><a href="#">湍流强度值</a></li>
-	<li><a href="#">最大风速和极大风速</a></li>
+	<li><a href="/result/{{.id}}/wvp-freq/turb"><code>风速、风能频率分布</code></a></li>
+	<li><a href="/result/{{.id}}/windrose"><code>风向、风能频率分布玫瑰图</code></a></li>
+
 	<li><a href="/result/{{.id}}/contrast">数据修改对比</a></li>
 	</ul>
 </li>

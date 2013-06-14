@@ -5,8 +5,6 @@ import (
 	"os"
 	"strings"
 	"time"
-
-	. "github.com/woodycarl/wind-go/logger"
 )
 
 var g = getId()

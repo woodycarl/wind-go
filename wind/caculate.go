@@ -3,8 +3,6 @@ package wind
 import (
 	"math"
 	"time"
-
-	. "github.com/woodycarl/wind-go/logger"
 )
 
 func caculates(r []Result, c Config) []Result {

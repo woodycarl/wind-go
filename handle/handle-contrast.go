@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	. "github.com/woodycarl/wind-go/logger"
 	"github.com/woodycarl/wind-go/wind"
 )
 
@@ -22,6 +21,9 @@ type ContrastData struct {
 }
 
 func handleContrast(w http.ResponseWriter, r *http.Request) {
+	Info("=== Handle Contrast ===")
+	timeS := time.Now()
+
 	id := mux.Vars(r)["id"]
 
 	data, err := getData(id)
@@ -74,6 +76,8 @@ func handleContrast(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page.render("contrast", w)
+
+	Info("=== End Handle Contrast", time.Now().Sub(timeS), "===")
 }
 
 func saveCData(id string, s []wind.Sensor, ds []ContrastData) {
@@ -88,7 +92,7 @@ func saveCData(id string, s []wind.Sensor, ds []ContrastData) {
 	lines = append(lines, line)
 
 	for _, v := range ds {
-		line = v.Time.Format("2006/01/02 15:04:05")
+		line = v.Time.Format(DATA_DATE_FORMAT)
 
 		for _, v1 := range v.Data {
 			line = line + "\t" + fmt.Sprintf("%0.2f", v1.O) + "\t" + fmt.Sprintf("%0.2f", v1.N)
@@ -102,7 +106,7 @@ func saveCData(id string, s []wind.Sensor, ds []ContrastData) {
 		lines = append(lines, line)
 	}
 
-	err := writeLines(lines, OUTPUT_DIR+id+"/data-c.txt")
+	err := writeLines(lines, OUTPUT_DIR+id+"/"+CONTRAST_FILE_NAME)
 	if err != nil {
 		Error("saveContrastData", err)
 		return

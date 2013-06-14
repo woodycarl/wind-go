@@ -5,7 +5,6 @@ import (
 	"runtime"
 
 	"github.com/gorilla/mux"
-	. "github.com/woodycarl/wind-go/logger"
 )
 
 func init() {
@@ -37,9 +36,10 @@ func Main() {
 	r.HandleFunc("/result/{id}/turbs", handleTurbs)
 	r.HandleFunc("/result/{id}/windshear", handleWindshear)
 
-	r.HandleFunc("/result/{id}/weibull", handleWeibull)
 	r.HandleFunc("/result/{id}/wvp-freq", handleWvpFreq)
+	r.HandleFunc("/result/{id}/wvp-freq/turb", handleWvpFreqTurbine)
 	r.HandleFunc("/result/{id}/windrose", handleWdvpWindRose)
+	r.HandleFunc("/result/{id}/weibull", handleWeibull)
 
 	r.HandleFunc("/result/{id}/contrast", handleContrast)
 

@@ -6,8 +6,12 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	. "github.com/woodycarl/wind-go/logger"
 	"github.com/woodycarl/wind-go/wind"
+)
+
+var (
+	CATS_MONTH = []string{"1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"}
+	CATS_HOUR  = []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"}
 )
 
 type WvpFigData struct {
@@ -46,6 +50,7 @@ type ChWvpMHData struct {
 func handleWvpAvg(w http.ResponseWriter, r *http.Request) {
 	Info("=== Handle Wvp Avg ===")
 	timeS := time.Now()
+
 	id := mux.Vars(r)["id"]
 	cat := mux.Vars(r)["cat"]
 
@@ -117,6 +122,7 @@ func handleWvpAvg(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page.render("wvp-avg", w)
+
 	Info("=== End Handle Wvp Avg", time.Now().Sub(timeS), "===")
 }
 
@@ -146,11 +152,11 @@ func getWvpAvg(db wind.DB, s wind.Station, cat1, cat2 string, index int, limit b
 			if !limit {
 				cats = A
 			} else {
-				cats = []string{"1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"}
+				cats = CATS_MONTH
 			}
 		} else if cat2 == "yh" {
 			ds, chWvpData.err = wind.CalWvpAvgH(t, d)
-			cats = []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"}
+			cats = CATS_HOUR
 		}
 		if chWvpData.err != nil {
 			ch <- chWvpData
@@ -166,7 +172,10 @@ func getWvpAvg(db wind.DB, s wind.Station, cat1, cat2 string, index int, limit b
 		chds = append(chds, wvpdata)
 	}
 
-	title := "不同高度测风年"
+	title := "不同高度"
+	if limit {
+		title += "测风年"
+	}
 
 	chWvpData.data = getWvpAvgData(cats, chds, cat1, cat2, title, limit)
 	chWvpData.index = index
@@ -249,8 +258,6 @@ func getWvpAvgM(T, V, P []float64, limit bool, title string) (wvpss []WvpFigMH, 
 	var vs, ps [][]float64
 	var catsM, A []string
 
-	cats := []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"}
-
 	vs, A, err = wind.CalWvpAvgMH(T, V, limit)
 	if err != nil {
 		return
@@ -258,7 +265,7 @@ func getWvpAvgM(T, V, P []float64, limit bool, title string) (wvpss []WvpFigMH, 
 	if !limit {
 		catsM = A
 	} else {
-		catsM = []string{"1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"}
+		catsM = CATS_MONTH
 	}
 
 	ps, _, err = wind.CalWvpAvgMH(T, P, limit)
@@ -269,7 +276,7 @@ func getWvpAvgM(T, V, P []float64, limit bool, title string) (wvpss []WvpFigMH, 
 	for i, v := range catsM {
 		wvps := WvpFigMH{
 			Title:  title + " " + v + "月份风速风能日变化图",
-			Cats:   cats,
+			Cats:   CATS_HOUR,
 			WvData: vs[i],
 			WpData: ps[i],
 		}
@@ -292,20 +299,20 @@ func getTurbineWvpAvg(s wind.Station, cat1, cat2 string, index int, limit bool, 
 		D = s.DataWv
 	}
 
-	var cats []string
+	var cats, A []string
 	var ds []float64
-	var A []string
+
 	switch cat2 {
 	case "ym":
 		ds, A, chWvpData.err = wind.CalWvpAvgM(s.DataTime, D, limit)
 		if !limit {
 			cats = A
 		} else {
-			cats = []string{"1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"}
+			cats = CATS_MONTH
 		}
 	case "yh":
 		ds, chWvpData.err = wind.CalWvpAvgH(s.DataTime, D)
-		cats = []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"}
+		cats = CATS_HOUR
 	}
 	if chWvpData.err != nil {
 		ch <- chWvpData

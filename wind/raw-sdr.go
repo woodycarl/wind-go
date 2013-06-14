@@ -7,8 +7,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	. "github.com/woodycarl/wind-go/logger"
 )
 
 func decInfoSDR(lines []string) (sensors []Sensor, logger Logger, site Site, linesR []string, err error) {

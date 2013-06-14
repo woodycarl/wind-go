@@ -8,7 +8,6 @@ import (
 	"regexp"
 	"strconv"
 
-	. "github.com/woodycarl/wind-go/logger"
 	"github.com/woodycarl/wind-go/wind"
 )
 

@@ -4,8 +4,6 @@ import (
 	"errors"
 	"math"
 	"time"
-
-	. "github.com/woodycarl/wind-go/logger"
 )
 
 func integrities(r []Result, c Config) (rr []Result, err error) {
