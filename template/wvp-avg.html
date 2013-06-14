@@ -2,7 +2,7 @@
 <!-- Wvp-Fig -->
 <div class="dig">
 	<div class="modal-header">
-		<h3></h3>
+		<h3>平均风速风功率变化图</h3>
 	</div>
 
 	<div class="modal-body">
@@ -72,9 +72,7 @@ function showWvpFig(id,wvp) {
 	console.log(data);
 	$('#chart_wvp_'+id).highcharts({
 		chart: {
-			type: 'line',
-			marginRight: 130,
-			marginBottom: 25
+			type: 'line'
 		},
 		title: {
 			text: wvp.Title+"变化图",
@@ -85,7 +83,11 @@ function showWvpFig(id,wvp) {
 			x: -20
 		},
 		xAxis: {
-			categories: wvp.Cats
+			categories: wvp.Cats,
+			labels: {
+				rotation: wvp.Rotation,
+				align: 'right',
+			}
 		},
 		yAxis: {
 			title: {
@@ -124,7 +126,10 @@ function showWvpMhFig(id,wvp) {
 			text: ''
 		},
 		xAxis: [{
-			categories: wvp.Cats
+			categories: wvp.Cats,
+			labels: {
+				rotation: wvp.Rotation
+			}
 		}],
 		yAxis: [{ // Secondary yAxis
 			gridLineWidth: 0,

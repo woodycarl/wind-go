@@ -23,6 +23,7 @@ type WvpFig struct {
 	ValueSuffix string
 	Data        []WvpFigData
 	Unit        string
+	Rotation    float64
 }
 
 type WvpFigMH struct {
@@ -59,17 +60,32 @@ func handleWvpAvg(w http.ResponseWriter, r *http.Request) {
 	chWvpMH := make(chan ChWvpMHData)
 
 	if cat == "all" {
-		go getWvpAvg(data, "wv", "ym", 0, true, chWvp)
-		go getWvpAvg(data, "wp", "ym", 1, true, chWvp)
-		go getWvpAvg(data, "wv", "yh", 2, true, chWvp)
-		go getWvpAvg(data, "wp", "yh", 3, true, chWvp)
-		go getWvpAvgMh(data, true, chWvpMH)
+		db := wind.DB(data.RD)
+		go getWvpAvg(db, s, "wv", "ym", 0, true, chWvp)
+		go getWvpAvg(db, s, "wp", "ym", 1, true, chWvp)
+		go getWvpAvg(db, s, "wv", "yh", 2, true, chWvp)
+		go getWvpAvg(db, s, "wp", "yh", 3, true, chWvp)
+		go getWvpAvgMh(db, s, true, chWvpMH)
 	} else if cat == "turb" {
 		go getTurbineWvpAvg(s, "wv", "ym", 0, true, chWvp)
 		go getTurbineWvpAvg(s, "wp", "ym", 1, true, chWvp)
 		go getTurbineWvpAvg(s, "wv", "yh", 2, true, chWvp)
 		go getTurbineWvpAvg(s, "wp", "yh", 3, true, chWvp)
 		go getTurbineWvpAvgMh(s, true, chWvpMH)
+	} else if cat == "raw" {
+		db := wind.DB(data.D1)
+		go getWvpAvg(db, s, "wv", "ym", 0, true, chWvp)
+		go getWvpAvg(db, s, "wp", "ym", 1, true, chWvp)
+		go getWvpAvg(db, s, "wv", "yh", 2, true, chWvp)
+		go getWvpAvg(db, s, "wp", "yh", 3, true, chWvp)
+		go getWvpAvgMh(db, s, true, chWvpMH)
+	} else if cat == "raw-a" {
+		db := wind.DB(data.D1)
+		go getWvpAvg(db, s, "wv", "ym", 0, false, chWvp)
+		go getWvpAvg(db, s, "wp", "ym", 1, false, chWvp)
+		go getWvpAvg(db, s, "wv", "yh", 2, false, chWvp)
+		go getWvpAvg(db, s, "wp", "yh", 3, false, chWvp)
+		go getWvpAvgMh(db, s, false, chWvpMH)
 	}
 
 	d := map[int]WvpFig{}
@@ -104,9 +120,8 @@ func handleWvpAvg(w http.ResponseWriter, r *http.Request) {
 	Info("=== End Handle Wvp Avg", time.Now().Sub(timeS), "===")
 }
 
-func getWvpAvg(data Data, cat1, cat2 string, index int, limit bool, ch chan ChWvpData) {
+func getWvpAvg(db wind.DB, s wind.Station, cat1, cat2 string, index int, limit bool, ch chan ChWvpData) {
 	timeS := time.Now()
-	s := data.S
 
 	var chWvpData ChWvpData
 	var cats, A []string
@@ -117,9 +132,9 @@ func getWvpAvg(data Data, cat1, cat2 string, index int, limit bool, ch chan ChWv
 		channel := v.Channel
 		height := v.Height
 
-		db := wind.DB(data.RD).Get("Time ChAvg" + channel)
-		t := db["Time"]
-		d := db["ChAvg"+channel]
+		td := db.Get("Time ChAvg" + channel)
+		t := td["Time"]
+		d := td["ChAvg"+channel]
 
 		if cat1 == "wp" {
 			d = wind.Wv2Wp(d, s.AirDensity)
@@ -153,16 +168,20 @@ func getWvpAvg(data Data, cat1, cat2 string, index int, limit bool, ch chan ChWv
 
 	title := "不同高度测风年"
 
-	chWvpData.data = getWvpAvgData(cats, chds, cat1, cat2, title)
+	chWvpData.data = getWvpAvgData(cats, chds, cat1, cat2, title, limit)
 	chWvpData.index = index
 	ch <- chWvpData
 	Info("getWvpAvg", time.Now().Sub(timeS))
 }
 
-func getWvpAvgData(cats []string, chds []WvpFigData, cat1, cat2, title string) WvpFig {
+func getWvpAvgData(cats []string, chds []WvpFigData, cat1, cat2, title string, limit bool) WvpFig {
 	wvps := WvpFig{
 		Cats: cats,
 		Data: chds,
+	}
+
+	if !limit && cat2 == "ym" {
+		wvps.Rotation = -45.0
 	}
 
 	switch cat1 + cat2 {
@@ -195,19 +214,18 @@ func getWvpAvgData(cats []string, chds []WvpFigData, cat1, cat2, title string) W
 	return wvps
 }
 
-func getWvpAvgMh(data Data, limit bool, ch chan ChWvpMHData) {
+func getWvpAvgMh(db wind.DB, s wind.Station, limit bool, ch chan ChWvpMHData) {
 	timeS := time.Now()
 	var chWvpMHData ChWvpMHData
-	s := data.S
 
 	var wvpss []WvpFigMH
 
 	for _, v := range s.Sensors["wv"] {
 		channel, height := v.Channel, v.Height
 
-		db := wind.DB(data.RD).Get("Time ChAvg" + channel)
-		T := db["Time"]
-		V := db["ChAvg"+channel]
+		td := db.Get("Time ChAvg" + channel)
+		T := td["Time"]
+		V := td["ChAvg"+channel]
 		P := wind.Wv2Wp(V, s.AirDensity)
 
 		title := fmt.Sprint("Ch", channel, "(", height, "m)")
@@ -255,6 +273,7 @@ func getWvpAvgM(T, V, P []float64, limit bool, title string) (wvpss []WvpFigMH, 
 			WvData: vs[i],
 			WpData: ps[i],
 		}
+
 		wvpss = append(wvpss, wvps)
 	}
 
@@ -303,7 +322,7 @@ func getTurbineWvpAvg(s wind.Station, cat1, cat2 string, index int, limit bool, 
 
 	title := "轮毂高度(" + fmt.Sprint(config.Config.CalHeight) + "m)测风年"
 
-	chWvpData.data = getWvpAvgData(cats, chds, cat1, cat2, title)
+	chWvpData.data = getWvpAvgData(cats, chds, cat1, cat2, title, limit)
 	chWvpData.index = index
 	ch <- chWvpData
 	Info("getTurbineWvpAvg", time.Now().Sub(timeS))

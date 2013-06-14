@@ -33,7 +33,7 @@ func Main() {
 	r.HandleFunc("/result/{id}/linest/{cat:wv|wd}", handleLinest)
 	r.HandleFunc("/result/{id}/linest-fig/{cat:wv|wd}/{ch}", handleLinestFig)
 
-	r.HandleFunc("/result/{id}/wvp-avg/{cat:all|turb}", handleWvpAvg)
+	r.HandleFunc("/result/{id}/wvp-avg/{cat:all|turb|raw|raw-a}", handleWvpAvg)
 	r.HandleFunc("/result/{id}/turbs", handleTurbs)
 	r.HandleFunc("/result/{id}/windshear", handleWindshear)
 
