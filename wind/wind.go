@@ -14,6 +14,7 @@ func HandleData(data [][]string, c Config) (r []Result, err error) {
 
 	for i, _ := range r {
 		r[i].S.AirDensity = c.AirDensity
+		r[i].S.TurbineHeight = c.CalHeight
 	}
 
 	r = linests(r)             // 计算线性相关

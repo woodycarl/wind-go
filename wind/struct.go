@@ -31,6 +31,8 @@ type Station struct {
 	Wvp   []map[string]Mwvp
 	Turbs []float64
 	Wss   Wss
+
+	TurbineHeight float64
 }
 
 type Result struct {

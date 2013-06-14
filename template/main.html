@@ -66,17 +66,9 @@
 <li class="dropdown">
 	<a class="dropdown-toggle" data-toggle="dropdown" href="#">基本数据 <b class="caret"></b></a>
 	<ul class="dropdown-menu">
-	<li><a href="/result/{{.id}}/wv/ym"><code>平均风速</code>(不同高度|测风年|逐月)</a></li>
-	<li><a href="/result/{{.id}}/wv/yh"><code>平均风速</code>(不同高度|代表年|逐时)</a></li>
-	<li class="divider"></li>
-	<li><a href="/result/{{.id}}/wp/ym"><code>平均风功率密度</code>(不同高度|测风年|逐月)</a></li>
-	<li><a href="/result/{{.id}}/wp/yh"><code>平均风功率密度</code>(不同高度|代表年|逐时)</a></li>
-	<li class="divider"></li>
-	<li><a href="/result/{{.id}}/wvp/mh"><code>平均风速风功率</code>(各月|逐时)</a></li>
-	<li class="divider"></li>
+	<li><a href="/result/{{.id}}/wvp-avg/all"><code>平均风速风功率</code>(不同高度)</a></li>
 	<li><a href="/result/{{.id}}/turbs"><code>平均湍流强度</code>(不同高度)</a></li>
-	<li class="divider"></li>
-	<li><a href="/result/{{.id}}/windshear"><code>风切变指数</code>(不同高度)</a></li>
+	<li><a href="/result/{{.id}}/windshear"><code>风切变指数</code></a></li>
 	</ul>
 </li>
 
@@ -92,6 +84,7 @@
 <li class="dropdown">
 	<a class="dropdown-toggle" data-toggle="dropdown" href="#">轮毂高度数据 <b class="caret"></b></a>
 	<ul class="dropdown-menu">
+	<li><a href="/result/{{.id}}/wvp-avg/turb"><code>平均风速风功率</code></a></li>
 	<li><a href="#">风速风功率</a></li>
 	<li><a href="#">代表年平均风向频率、风能密度方向分布</a></li>
 	<li><a href="#">代表年风频曲线及威布尔参数</a></li>

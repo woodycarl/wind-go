@@ -7,9 +7,9 @@
 
 	<div class="modal-body">
 
-<div id="chart_wvp">
-{{range $i,$v:= .wvps}}
-<div id="chart_wvp_{{$i}}"></div>
+<div id="chart_wvpmh">
+{{range $i,$v:= .wvpsmh}}
+<div id="chart_wvpmh_{{$i}}"></div>
 {{end}}
 </div>
 
@@ -19,15 +19,15 @@
 
 <script>
 $(document).ready(function(){
-	{{range $i,$v:= .wvps}}
-		var v{{$i}} = {{toJson $v}};
+	{{range $i,$v:= .wvpsmh}}
+		var vmh{{$i}} = {{toJson $v}};
 
-		showWvpFig({{$i}},v{{$i}});
+		showWvpMhFig({{$i}},vmh{{$i}});
 	{{end}}
 });
 
-function showWvpFig(id,wvp) {
-	$('#chart_wvp_'+id).highcharts({
+function showWvpMhFig(id,wvp) {
+	$('#chart_wvpmh_'+id).highcharts({
 		chart: {
 			zoomType: 'xy'
 		},

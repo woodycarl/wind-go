@@ -41,7 +41,8 @@ func Main() {
 	r.HandleFunc("/result/{id}/weibull", handleWeibull)
 	r.HandleFunc("/result/{id}/windrose", handleWdvpWindRose)
 	r.HandleFunc("/result/{id}/wvp-freq", handleWvpFreq)
-	//r.HandleFunc("/result/{id}/turbine/wvp", handleTurbineWvp)
+
+	r.HandleFunc("/result/{id}/wvp-avg/{cat:all|turb}", handleWvpAvg)
 
 	r.HandleFunc("/result/{id}/contrast", handleContrast)
 
