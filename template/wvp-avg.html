@@ -23,7 +23,7 @@
 	<tbody>
 		{{range .Data}}
 		<tr>
-			<th>(Ch{{.Channel}}){{.Height}}m</th>
+			<th>{{.Name}}</th>
 			{{range .Data}}<th>{{printf "%0.2f" .}}</th>{{end}}
 			<th>{{printf "%0.2f" .Avg}}</th>
 		</tr>
@@ -38,6 +38,7 @@
 <div id="chart_wvpmh_{{$i}}"></div>
 {{end}}
 </div>
+
 
 	</div>
 

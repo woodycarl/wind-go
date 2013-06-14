@@ -28,7 +28,6 @@ type Station struct {
 	Cm         []Am
 	AirDensity float64
 
-	Wvp   []map[string]Mwvp
 	Turbs []float64
 	Wss   Wss
 
@@ -109,13 +108,6 @@ type Am struct {
 type Err struct {
 	Err []bool
 	Num int
-}
-
-type Mwvp struct {
-	Wv  float64
-	Wp  float64
-	Hwv map[string]float64
-	Hwp map[string]float64
 }
 
 type Ws struct {

@@ -4,9 +4,9 @@ import (
 	"errors"
 	"strconv"
 	"time"
-
-	//. "github.com/woodycarl/wind-go/logger"
 )
+
+// 计算平均风速风功率
 
 func CalWvpAvgH(T, D []float64) (data []float64, err error) {
 	var db DB

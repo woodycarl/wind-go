@@ -33,16 +33,13 @@ func Main() {
 	r.HandleFunc("/result/{id}/linest/{cat:wv|wd}", handleLinest)
 	r.HandleFunc("/result/{id}/linest-fig/{cat:wv|wd}/{ch}", handleLinestFig)
 
-	r.HandleFunc("/result/{id}/{cat1:wv|wp}/{cat2:yh|ym}", handleWvpFig)
-	r.HandleFunc("/result/{id}/wvp/mh", handleWvpMhFig)
-
+	r.HandleFunc("/result/{id}/wvp-avg/{cat:all|turb}", handleWvpAvg)
 	r.HandleFunc("/result/{id}/turbs", handleTurbs)
 	r.HandleFunc("/result/{id}/windshear", handleWindshear)
-	r.HandleFunc("/result/{id}/weibull", handleWeibull)
-	r.HandleFunc("/result/{id}/windrose", handleWdvpWindRose)
-	r.HandleFunc("/result/{id}/wvp-freq", handleWvpFreq)
 
-	r.HandleFunc("/result/{id}/wvp-avg/{cat:all|turb}", handleWvpAvg)
+	r.HandleFunc("/result/{id}/weibull", handleWeibull)
+	r.HandleFunc("/result/{id}/wvp-freq", handleWvpFreq)
+	r.HandleFunc("/result/{id}/windrose", handleWdvpWindRose)
 
 	r.HandleFunc("/result/{id}/contrast", handleContrast)
 

@@ -2,7 +2,6 @@ package wind
 
 import (
 	"math"
-	"strconv"
 	"time"
 
 	. "github.com/woodycarl/wind-go/logger"
@@ -38,9 +37,6 @@ func caculate(s Station, d1, d2, rd []Data, c Config) Station {
 	chTurbs := make(chan []float64)
 	go calTurbs(s, d1, d2, chTurbs)
 
-	chWvp := make(chan []map[string]Mwvp)
-	go calAvgWvp(s, db, chWvp)
-
 	chWss := make(chan Wss)
 	go calWindShear(db, s.Sensors["wv"], chWss)
 
@@ -63,8 +59,6 @@ func caculate(s Station, d1, d2, rd []Data, c Config) Station {
 
 	s.Wss = <-chWss
 
-	s.Wvp = <-chWvp
-	// 计算平均速度和风功率
 	s.Turbs = <-chTurbs
 
 	Info("done cal")
@@ -86,107 +80,6 @@ func chooseCh(s []Sensor, calHeight float64) (b bool, c string) {
 		}
 	}
 	return false, c
-}
-
-// 计算平均风速风功率
-func calAvgWvp(s Station, db DB, chWvp chan []map[string]Mwvp) {
-	Info("Wvp")
-	dbMs := map[string]DB{}
-	for _, v := range s.Cm {
-		m := strconv.Itoa(int(v.Month))
-		dbMs[m] = db.filter("Month", v.Month)
-	}
-
-	wvp := []map[string]Mwvp{}
-	for _, v1 := range s.Sensors["wv"] {
-		ch := "ChAvg" + v1.Channel
-
-		chwvp := map[string]Mwvp{}
-		chwvp0 := Mwvp{Hwv: map[string]float64{}, Hwp: map[string]float64{}}
-		for _, v2 := range s.Cm {
-			m := strconv.Itoa(int(v2.Month))
-
-			chwvpM := Mwvp{Hwv: map[string]float64{}, Hwp: map[string]float64{}}
-
-			dataM := dbMs[m].get(ch)[ch]
-			chwvpM.Wv = ArrayAvg(dataM)
-			chwvpM.Wp = s.AirDensity * ArrayAvg(ArrayPow(dataM, 3.0)) / 2.0
-
-			chwvp0.Wv = chwvp0.Wv + chwvpM.Wv
-			chwvp0.Wp = chwvp0.Wp + chwvpM.Wp
-
-			for k := 0; k < 24; k++ {
-				ks := strconv.Itoa(k)
-				dataMH := dbMs[m].filter("Hour", float64(k)).get(ch)[ch]
-
-				chwvpM.Hwv[ks] = ArrayAvg(dataMH)
-				chwvpM.Hwp[ks] = s.AirDensity * ArrayAvg(ArrayPow(dataMH, 3.0)) / 2.0
-
-				chwvp0.Hwv[ks] = chwvp0.Hwv[ks] + chwvpM.Hwv[ks]
-				chwvp0.Hwp[ks] = chwvp0.Hwp[ks] + chwvpM.Hwp[ks]
-
-			}
-
-			chwvp[m] = chwvpM
-		}
-		chwvp0.Wv = chwvp0.Wv / 12.0
-		chwvp0.Wp = chwvp0.Wp / 12.0
-		for k := 0; k < 24; k++ {
-			h := strconv.Itoa(k)
-			chwvp0.Hwv[h] = chwvp0.Hwv[h] / 12.0
-			chwvp0.Hwp[h] = chwvp0.Hwp[h] / 12.0
-		}
-		chwvp["0"] = chwvp0
-		wvp = append(wvp, chwvp)
-	}
-	chWvp <- wvp
-	return
-}
-
-func CalAvgWvp(T, V, P []float64) (Vym, Pym, Vyh, Pyh []float64, Vmh, Pmh [][]float64) {
-	var data []Data
-	for i, v := range T {
-		t := time.Unix(int64(v), 0)
-		m := t.Month()
-		h := t.Hour()
-		d := Data{
-			"Month": float64(int(m)),
-			"Hour":  float64(h),
-			"V":     V[i],
-			"P":     P[i],
-		}
-		data = append(data, d)
-	}
-
-	db := DB(data)
-
-	for i := 1; i < 13; i++ {
-		dbM := db.filter("Month", float64(i))
-		dataM := dbM.get("V P")
-		Vym = append(Vym, ArrayAvg(dataM["V"]))
-		Pym = append(Pym, ArrayAvg(dataM["P"]))
-
-		var vmh, pmh []float64
-		for k := 0; k < 24; k++ {
-			dataMH := dbM.filter("Hour", float64(k)).get("V P")
-
-			vmh = append(vmh, ArrayAvg(dataMH["V"]))
-			pmh = append(pmh, ArrayAvg(dataMH["P"]))
-		}
-
-		Vmh = append(Vmh, vmh)
-		Pmh = append(Pmh, pmh)
-	}
-
-	for i := 0; i < 24; i++ {
-		dbH := db.filter("Hour", float64(i))
-		dataH := dbH.get("V P")
-
-		Vyh = append(Vyh, ArrayAvg(dataH["V"]))
-		Pyh = append(Pyh, ArrayAvg(dataH["P"]))
-	}
-
-	return
 }
 
 // 湍流强度 数据源 data1h data10m
