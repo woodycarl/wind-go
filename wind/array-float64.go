@@ -88,6 +88,11 @@ func ArrayMin(array []float64) float64 {
 }
 
 func ArrayMinI(array []float64) (index int, min float64) {
+	if len(array) < 1 {
+		index = -1
+		return
+	}
+
 	min = array[0]
 	for i, v := range array {
 		if min > v {

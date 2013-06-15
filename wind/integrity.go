@@ -1,81 +1,31 @@
 package wind
 
 import (
-	"errors"
 	"math"
 	"time"
 )
 
-func integrities(r []Result, c Config) (rr []Result, err error) {
+func integrities(r []Result, c Config) []Result {
 	Info("---Integrity---")
 	timeS := time.Now()
 
 	for i, v := range r {
-		r[i].S, err = integrity(v.S, v.D1, c)
-		if err != nil {
-			return
-		}
+		r[i].S = integrity(v.S, v.D1, c)
 
 		Info(r[i].ID, r[i].S.Cm[0].My, r[i].S.Cm[11].My)
 	}
 
 	Info("Integrity", time.Now().Sub(timeS))
-
-	rr = r
-	return
+	return r
 }
 
-func integrity(s Station, data []Data, c Config) (ss Station, err error) {
+func integrity(s Station, data []Data, c Config) Station {
 	s.Am = calErrs(s.Am, data, s.Sensors, c)
 
-	s.Cm, err = chooseOneYear(s.Am)
-	if err != nil {
-		return
-	}
+	s.Cm = chooseOneYear(s.Am)
 
-	ss = s
-	return
+	return s
 }
-
-/*
-	//替换上面代码后从 440ms -> 340ms
-	type ChIntegrity struct {
-		index int
-		s     Station
-	}
-
-	func integrities(r []Result, c Config) []Result {
-		Info("---Integrity---")
-		timeS := time.Now()
-
-		chIntegrity := make(chan ChIntegrity, len(r))
-		for i, v := range r {
-			go integrity(i, v.S, v.D1, c, chIntegrity)
-		}
-
-		for _, _ = range r {
-			tD := <-chIntegrity
-			r[tD.index].S = tD.s
-			Info(r[tD.index].ID, r[tD.index].S.Cm[0].My, r[tD.index].S.Cm[11].My)
-		}
-
-		Info("Integrity", time.Now().Sub(timeS))
-		return r
-	}
-
-	func integrity(i int, s Station, data []Data, c Config, ch chan ChIntegrity) {
-		s.Am = calErrs(s.Am, data, s.Sensors, c)
-		s.Am = calIntegrity(s.Am)
-		s.Cm = chooseOneYear(s.Am)
-
-		chData := ChIntegrity{
-			index: i,
-			s:     s,
-		}
-
-		ch <- chData
-	}
-*/
 
 func calErrs(am []Am, data []Data, s map[string][]Sensor, c Config) []Am {
 	db := DB(data)
@@ -121,7 +71,6 @@ func calErrs(am []Am, data []Data, s map[string][]Sensor, c Config) []Am {
 }
 
 func getErrR(db DB, cat string, s []Sensor) (errs [][]bool) {
-
 	for _, v := range s {
 		ch := v.Channel
 		data := db.get("ChAvg" + ch)["ChAvg"+ch]
@@ -155,7 +104,6 @@ func jR(data float64, cat string) (b bool) {
 	return
 }
 func getErrT(db DB, cat string, s []Sensor) (errs [][]bool) {
-
 	for _, v := range s {
 		ch := v.Channel
 		t := db.get("ChAvg" + ch + " time")
@@ -224,6 +172,7 @@ func arrayOr(x, y []bool) (r []bool) {
 	for i, _ := range x {
 		r = append(r, x[i] || y[i])
 	}
+
 	return
 }
 func trueNum(err []bool) (num int) {
@@ -235,7 +184,6 @@ func trueNum(err []bool) (num int) {
 	return
 }
 func getErrC(db DB, cat string, s []Sensor) (errs [][][]bool) {
-
 	if len(s) < 2 {
 		return
 	}
@@ -331,47 +279,35 @@ func countDays(year, month int) (days int) {
 	return
 }
 
-func chooseOneYear(am []Am) (cm []Am, err error) {
-	if len(am) < 12 {
-		err = errors.New("chooseOneYear: len am < 12")
+func chooseOneYear(am []Am) (cm []Am) {
+	if len(am) <= 12 {
+		cm = am
 		return
 	}
 
-	choise := map[int]float64{}
+	choise := []float64{}
 	for i := 0; i < len(am)-11; i++ {
+		d := 0.0
 		for j := i; j < i+12; j++ {
-			choise[i] = choise[i] + am[j].Sr
+			d = d + am[j].Sr
 		}
+
+		choise = append(choise, d)
 	}
 
-	min, _ := minFloatS(choise)
+	min, _ := ArrayMinI(choise)
 
-	for i := min; i < min+12; i++ {
-		cm = append(cm, am[i])
-	}
+	cm = am[min : min+12]
 
-	return
-}
-func minFloatS(v map[int]float64) (index int, m float64) {
-	if len(v) > 0 {
-		m = v[0]
-		index = 0
-	}
-	for i := 1; i < len(v); i++ {
-		if v[i] < m {
-			m = v[i]
-			index = i
-		}
-	}
 	return
 }
 
 func arrayOrT(x, y []bool) []bool {
-
-	for i, _ := range x {
-		y[i] = y[i] || x[i]
-		y[i+1] = y[i+1] || x[i]
-
+	a := y
+	for i := 0; i < len(x) && i < len(y)-1; i++ {
+		a[i] = y[i] || x[i]
+		a[i+1] = y[i+1] || x[i]
 	}
-	return y
+
+	return a
 }

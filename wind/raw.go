@@ -31,8 +31,7 @@ func decRaw(data [][]string) (r []Result, err error) {
 	for _, _ = range data {
 		v := <-chRaw
 
-		if v.err != nil {
-			err = v.err
+		if err = v.err; err != nil {
 			return
 		}
 
@@ -41,7 +40,7 @@ func decRaw(data [][]string) (r []Result, err error) {
 			case v.is10m && (len(r[i].D2) > 0 || len(r[i].D1) == 0):
 				fallthrough
 			case !v.is10m && (len(r[i].D1) > 0 || len(r[i].D2) == 0):
-				err = errors.New("file cannot match!")
+				err = errors.New("decRaw file cannot match!")
 				return
 			}
 			if v.is10m {
@@ -73,14 +72,7 @@ func decRaw(data [][]string) (r []Result, err error) {
 				err = errors.New(v.S.Site.Site + ": can not gen 1h data!")
 				return
 			}
-			Info("gen D1", len(r[i].D1))
-			// go saveRData(strconv.Itoa(g()), r[i].D1, r[i].S.SensorsR)
-		}
-
-		if len(v.D2) < 1 {
-			Warn(v.S.Site.Site + ": no 10m data!")
-			// err = errors.New(v.S.Site.Site + ": no 10m data!")
-			// return
+			Info(v.S.Site.Site+": gen D1", len(r[i].D1))
 		}
 	}
 
@@ -90,8 +82,7 @@ func decRaw(data [][]string) (r []Result, err error) {
 	}
 	for i, _ := range r {
 		tD := <-chR
-		if tD.err != nil {
-			err = tD.err
+		if err = tD.err; err != nil {
 			return
 		}
 		r[i] = tD.r
@@ -102,9 +93,6 @@ func decRaw(data [][]string) (r []Result, err error) {
 }
 
 func existStation(s Station, r []Result) (int, bool) {
-	if len(r) == 0 {
-		return 0, false
-	}
 	for i, v := range r {
 		if isSameStation(s, v.S) {
 			return i, true
@@ -123,11 +111,11 @@ func isSameStation(s1, s2 Station) bool {
 		return false
 	case s1.Site != s2.Site:
 		return false
+	default:
+		return true
 	}
-	return true
 }
 
-// 解析原始数据，返回到 channel
 func DecodeData(lines []string, ch chan RawData) {
 	Info("---Decode Data ---", len(lines))
 	var chData RawData

@@ -11,7 +11,7 @@ type ChLinestData struct {
 	rations []Ration
 }
 
-func linests(r []Result) []Result {
+func linests(r []Result, c Config) []Result {
 	Info("---Linests---")
 	timeS := time.Now()
 
@@ -20,7 +20,7 @@ func linests(r []Result) []Result {
 	for _, v := range cats {
 		for ir, v1 := range r {
 			for is, _ := range v1.S.Sensors[v] {
-				go linest(v, ir, is, r, chLinest)
+				go linest(v, ir, is, r, c, chLinest)
 			}
 		}
 	}
@@ -38,7 +38,7 @@ func linests(r []Result) []Result {
 	return r
 }
 
-func linest(v string, ir, is int, r []Result, ch chan ChLinestData) {
+func linest(v string, ir, is int, r []Result, c Config, ch chan ChLinestData) {
 	var rations []Ration
 	v1 := r[ir]
 	v2 := v1.S.Sensors[v][is]
@@ -54,7 +54,7 @@ func linest(v string, ir, is int, r []Result, ch chan ChLinestData) {
 			if ir == jr {
 				dataI = DB(v1.D1).get("ChAvg" + chI)["ChAvg"+chI]
 				dataJ = DB(v3.D1).get("ChAvg" + chJ)["ChAvg"+chJ]
-			} else if v2.Height == v4.Height {
+			} else if v2.Height == v4.Height && !c.Separate {
 				dI := DB(v1.D1).get("Time ChAvg" + chI)
 				dJ := DB(v3.D1).get("Time ChAvg" + chJ)
 				dataI, dataJ = getUnite(dI["Time"], dJ["Time"], dI["ChAvg"+chI], dJ["ChAvg"+chJ])

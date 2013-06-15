@@ -8,9 +8,9 @@ const (
 	M = 0.577215664901532860606512090082402431042159335
 )
 
-func WeibullKC(wv []float64) (k, c float64) {
-	avg := ArrayAvg(wv)
-	sv := ArraySv(wv)
+func WeibullKC(V []float64) (k, c float64) {
+	avg := ArrayAvg(V)
+	sv := ArraySv(V)
 
 	k = math.Pow(sv/avg, -1.086)
 	c = avg / gamma(1.0+1.0/k)
