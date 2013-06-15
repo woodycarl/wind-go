@@ -34,7 +34,7 @@ func handleInfo(w http.ResponseWriter, r *http.Request) {
 
 	case "integrity":
 		page["start"] = s.Cm[0].My
-		page["end"] = s.Cm[11].My
+		page["end"] = s.Cm[len(s.Cm)-1].My
 		page["cm"] = s.Cm
 
 	case "integrity-all":

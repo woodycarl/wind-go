@@ -12,7 +12,7 @@ func integrities(r []Result, c Config) []Result {
 	for i, v := range r {
 		r[i].S = integrity(v.S, v.D1, c)
 
-		Info(r[i].ID, r[i].S.Cm[0].My, r[i].S.Cm[11].My)
+		Info(r[i].ID, r[i].S.Cm[0].My, r[i].S.Cm[len(r[i].S.Cm)-1].My)
 	}
 
 	Info("Integrity", time.Now().Sub(timeS))
@@ -72,6 +72,11 @@ func calErrs(am []Am, data []Data, s map[string][]Sensor, c Config) []Am {
 
 func getErrR(db DB, cat string, s []Sensor) (errs [][]bool) {
 	for _, v := range s {
+		if len(db) < 1 {
+			errs = append(errs, []bool{false})
+			Warn("getErrR len db < 1")
+			continue
+		}
 		ch := v.Channel
 		data := db.get("ChAvg" + ch)["ChAvg"+ch]
 
@@ -85,7 +90,6 @@ func getErrR(db DB, cat string, s []Sensor) (errs [][]bool) {
 func jRs(data []float64, cat string) (err []bool) {
 	for _, v := range data {
 		if jR(v, cat) {
-
 			err = append(err, true)
 		} else {
 			err = append(err, false)
@@ -105,6 +109,11 @@ func jR(data float64, cat string) (b bool) {
 }
 func getErrT(db DB, cat string, s []Sensor) (errs [][]bool) {
 	for _, v := range s {
+		if len(db) < 1 {
+			errs = append(errs, []bool{false})
+			Warn("getErrT len db < 1")
+			continue
+		}
 		ch := v.Channel
 		t := db.get("ChAvg" + ch + " time")
 		data := t["ChAvg"+ch]
@@ -158,11 +167,11 @@ func calErrNumRT(errs [][]bool) (err []bool) {
 	return
 }
 func arrayOr(x, y []bool) (r []bool) {
-	if len(x) < 1 && len(y) > 1 {
+	if len(x) < 1 && len(y) >= 1 {
 		r = y
 		return
 	}
-	if len(x) > 1 && len(y) < 1 {
+	if len(x) >= 1 && len(y) < 1 {
 		r = x
 		return
 	}
@@ -195,10 +204,16 @@ func getErrC(db DB, cat string, s []Sensor) (errs [][][]bool) {
 	}
 
 	for i, v1 := range s {
+
 		heightI := float64(v1.Height)
 
 		var errI [][]bool
 		for j, v2 := range s {
+			if len(db) < 1 {
+				errI = append(errI, []bool{false})
+				Warn("getErrC len db < 1")
+				continue
+			}
 			heightJ := float64(v2.Height)
 
 			if i == j {

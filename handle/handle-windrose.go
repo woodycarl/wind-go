@@ -60,8 +60,8 @@ func handleWdvpWindRose(w http.ResponseWriter, r *http.Request) {
 	}
 
 	db := wind.DB(wrdatas)
-	for i := 1; i < 13; i++ {
-		dbM := db.Filter("Month", float64(i))
+
+	getWR := func(dbM wind.DB, i int) {
 		ds := dbM.Get("Wd Wv Wp")
 		wd, wv, wp := ds["Wd"], ds["Wv"], ds["Wp"]
 
@@ -69,6 +69,18 @@ func handleWdvpWindRose(w http.ResponseWriter, r *http.Request) {
 		windroseV.Title = strconv.Itoa(i) + "月风向频率分布玫瑰图"
 		windroseP.Title = strconv.Itoa(i) + "月风能频率分布玫瑰图"
 		windrose = append(windrose, windroseV, windroseP)
+	}
+
+	if len(s.Cm) == 12 {
+		for i := 1; i < 13; i++ {
+			dbM := db.Filter("Month", float64(i))
+			getWR(dbM, i)
+		}
+	} else {
+		for _, v := range s.Cm {
+			dbM := db.Filter("Month", v.Month)
+			getWR(dbM, int(v.Month))
+		}
 	}
 
 	page := Page{

@@ -27,7 +27,7 @@ func caculate(s Station, d1, d2, rd []Data, c Config) Station {
 			dataP := db.get(chP)[chP]
 			s.AirDensity = AirDensity(dataP, dataT)
 		} else {
-			s.AirDensity = AirDensity2(dataT, c.CalHeight)
+			s.AirDensity = AirDensity2(dataT, s.Site.SiteElevation)
 		}
 	}
 	Info("AirDensity:", s.AirDensity)
@@ -43,7 +43,7 @@ func caculate(s Station, d1, d2, rd []Data, c Config) Station {
 	_, wdCh := chooseCh(s.Sensors["wd"], c.CalHeight)
 	s.DataWd = db.get("ChAvg" + wdCh)["ChAvg"+wdCh]
 
-	if bv {
+	if bv || len(s.Cm) < 12 {
 		s.DataWv = db.get("ChAvg" + wvCh)["ChAvg"+wvCh]
 	} else {
 		s.DataWv = calWvData(rd, s.Sensors["wv"], c.CalHeight)
@@ -86,7 +86,7 @@ func calTurbs(s Station, data1h, data10m []Data, chTurbs chan []float64) {
 	cm := s.Cm
 	location, _ := time.LoadLocation("Local")
 	timeS := float64(time.Date(int(cm[0].Year), time.Month(int(cm[0].Month)), 1, 0, 0, 0, 0, location).Unix())
-	timeE := float64(time.Date(int(cm[11].Year), time.Month(int(cm[11].Month)+1), 1, 0, 0, 0, 0, location).Unix())
+	timeE := float64(time.Date(int(cm[len(cm)-1].Year), time.Month(int(cm[len(cm)-1].Month)+1), 1, 0, 0, 0, 0, location).Unix())
 	db1 := DB(data1h).filter("Time >=", timeS).filter("Time <", timeE)
 	db10 := DB(data10m).filter("Time >=", timeS).filter("Time <", timeE)
 
@@ -234,6 +234,7 @@ func calWindShear(db DB, s []Sensor, chWss chan Wss) {
 					XH:  height2,
 					Ws:  rws,
 				}
+
 				wss = append(wss, ws)
 			}
 		}

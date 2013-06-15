@@ -344,8 +344,8 @@ func adjustR(r Result, ch chan ChAjustR) {
 			r.D1 = adjustRTimes(r.D1, v.Channel, 1.6/3.6)
 			r.D2 = adjustRTimes(r.D2, v.Channel, 1.6/3.6)
 		case "Degrees F", "F":
-			r.D1 = adjustRAdd(r.D1, v.Channel, -273.15)
-			r.D2 = adjustRAdd(r.D2, v.Channel, -273.15)
+			r.D1 = adjustRF(r.D1, v.Channel)
+			r.D2 = adjustRF(r.D2, v.Channel)
 		case "mb", "mB", "MB":
 			r.D1 = adjustRTimes(r.D1, v.Channel, 0.1)
 			r.D2 = adjustRTimes(r.D2, v.Channel, 0.1)
@@ -362,9 +362,9 @@ func adjustRTimes(data []Data, ch string, t float64) []Data {
 	}
 	return data
 }
-func adjustRAdd(data []Data, ch string, t float64) []Data {
+func adjustRF(data []Data, ch string) []Data {
 	for i, _ := range data {
-		data[i]["ChAvg"+ch] = data[i]["ChAvg"+ch] + t
+		data[i]["ChAvg"+ch] = (data[i]["ChAvg"+ch] - 32.0) / 1.8
 	}
 	return data
 }

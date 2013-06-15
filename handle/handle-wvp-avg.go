@@ -64,33 +64,39 @@ func handleWvpAvg(w http.ResponseWriter, r *http.Request) {
 	chWvp := make(chan ChWvpData, 4)
 	chWvpMH := make(chan ChWvpMHData)
 
-	if cat == "all" {
+	getW := func(db wind.DB, limit bool) {
+		go getWvpAvg(db, s, "wv", "ym", 0, limit, chWvp)
+		go getWvpAvg(db, s, "wp", "ym", 1, limit, chWvp)
+		go getWvpAvg(db, s, "wv", "yh", 2, limit, chWvp)
+		go getWvpAvg(db, s, "wp", "yh", 3, limit, chWvp)
+		go getWvpAvgMh(db, s, limit, chWvpMH)
+	}
+	getT := func(limit bool) {
+		go getTurbineWvpAvg(s, "wv", "ym", 0, limit, chWvp)
+		go getTurbineWvpAvg(s, "wp", "ym", 1, limit, chWvp)
+		go getTurbineWvpAvg(s, "wv", "yh", 2, limit, chWvp)
+		go getTurbineWvpAvg(s, "wp", "yh", 3, limit, chWvp)
+		go getTurbineWvpAvgMh(s, limit, chWvpMH)
+	}
+
+	var limit bool
+
+	switch {
+	case len(s.Cm) == 12 && cat != "raw-a":
+		limit = true
+	case len(s.Cm) < 12 || cat == "raw-a":
+		limit = false
+	}
+
+	switch cat {
+	case "all":
 		db := wind.DB(data.RD)
-		go getWvpAvg(db, s, "wv", "ym", 0, true, chWvp)
-		go getWvpAvg(db, s, "wp", "ym", 1, true, chWvp)
-		go getWvpAvg(db, s, "wv", "yh", 2, true, chWvp)
-		go getWvpAvg(db, s, "wp", "yh", 3, true, chWvp)
-		go getWvpAvgMh(db, s, true, chWvpMH)
-	} else if cat == "turb" {
-		go getTurbineWvpAvg(s, "wv", "ym", 0, true, chWvp)
-		go getTurbineWvpAvg(s, "wp", "ym", 1, true, chWvp)
-		go getTurbineWvpAvg(s, "wv", "yh", 2, true, chWvp)
-		go getTurbineWvpAvg(s, "wp", "yh", 3, true, chWvp)
-		go getTurbineWvpAvgMh(s, true, chWvpMH)
-	} else if cat == "raw" {
+		getW(db, limit)
+	case "raw", "raw-a":
 		db := wind.DB(data.D1)
-		go getWvpAvg(db, s, "wv", "ym", 0, true, chWvp)
-		go getWvpAvg(db, s, "wp", "ym", 1, true, chWvp)
-		go getWvpAvg(db, s, "wv", "yh", 2, true, chWvp)
-		go getWvpAvg(db, s, "wp", "yh", 3, true, chWvp)
-		go getWvpAvgMh(db, s, true, chWvpMH)
-	} else if cat == "raw-a" {
-		db := wind.DB(data.D1)
-		go getWvpAvg(db, s, "wv", "ym", 0, false, chWvp)
-		go getWvpAvg(db, s, "wp", "ym", 1, false, chWvp)
-		go getWvpAvg(db, s, "wv", "yh", 2, false, chWvp)
-		go getWvpAvg(db, s, "wp", "yh", 3, false, chWvp)
-		go getWvpAvgMh(db, s, false, chWvpMH)
+		getW(db, limit)
+	case "turb":
+		getT(limit)
 	}
 
 	d := map[int]WvpFig{}

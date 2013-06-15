@@ -44,15 +44,22 @@ func calErrNumC1(errs [][][]bool) (errt [][]bool) {
 func revises(r []Result, c Config) (rr []Result, err error) {
 	Info("---Revise---")
 
+	var b bool
+
 	// 1.Lost
 	for i, v := range r {
+		if len(v.S.Cm) < 12 {
+			b = true
+			r[i].RD = r[i].D1
+			continue
+		}
 		r[i].RD, err = rLost(v.S, v.D1, c)
 		if err != nil {
 			return
 		}
 	}
 
-	if !c.AutoRevise {
+	if !c.AutoRevise || b {
 		rr = r
 		return
 	}
@@ -144,11 +151,6 @@ func revises(r []Result, c Config) (rr []Result, err error) {
 }
 
 func rLost(s Station, data []Data, c Config) (rData []Data, err error) {
-	// 需要增加const
-	if len(data) < 5000 {
-		err = errors.New("rLost: not enough data!")
-		return
-	}
 
 	db := DB(data)
 
@@ -221,13 +223,15 @@ func rLost(s Station, data []Data, c Config) (rData []Data, err error) {
 						}
 					}
 				}
-
 			}
 
 			rData = append(rData, d)
 		}
 	}
 
+	Info(len(data), len(rData))
+
+	return // 有不存在SD值的情况
 	// >12个相同作缺失处理
 	cats := []string{"wv", "wd", "t", "h"} // ,"p"
 	type Same struct {
@@ -301,12 +305,12 @@ func getMonthHourData(s Station, db DB) (DDt, DDDt) {
 	for _, v1 := range s.Cm {
 		dbMD := db.filter("My", v1.My)
 
-		if len(dbMD) < 100 {
+		if len(dbMD) < 24 {
 			dbMD = db.filter("Month", v1.Month)
-			Error(s.Site.Site, "no data, instead with Month Data", v1.My, len(dbMD))
+			Error(s.Site.Site, "not enouth data, instead with Month Data", v1.My, len(dbMD))
 
-			if len(dbMD) < 100 {
-				Error(s.Site.Site, "no Month Data")
+			if len(dbMD) < 24 {
+				Error(s.Site.Site, "not enouth Month Data")
 				// 需要增加err 返回，或处理方法
 			}
 		}

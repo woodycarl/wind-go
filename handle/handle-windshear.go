@@ -17,6 +17,7 @@ type WindshearData struct {
 	R      float64
 }
 
+// 风切变
 func handleWindshear(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
