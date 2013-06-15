@@ -139,22 +139,18 @@ func decDataSDR(lines []string, s []Sensor, index int, ch chan ChDecData) {
 		}
 
 		var t time.Time
-		var my float64
 
-		t, my, chDecData.err = decodeDate(data[0])
+		t, chDecData.err = decodeDate(data[0])
 		if chDecData.err != nil {
-			Error("decodeDate", chDecData.err)
 			ch <- chDecData
 			return
 		}
 
-		tData := Data{
-			"Time":  float64(t.Unix()),
-			"Hour":  float64(t.Hour()),
-			"My":    my,
-			"Day":   float64(t.Day()),
-			"Year":  float64(t.Year()),
-			"Month": float64(t.Month()),
+		var tData Data
+		tData, chDecData.err = NewData(t)
+		if chDecData.err != nil {
+			ch <- chDecData
+			return
 		}
 
 		for j, v := range s {

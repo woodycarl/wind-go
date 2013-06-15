@@ -67,8 +67,8 @@ func decRaw(data [][]string) (r []Result, err error) {
 	for i, v := range r {
 		if len(v.D1) < 1 {
 			Warn(v.S.Site.Site+": no 1h data! gen from 10m data.", len(v.D2))
-			r[i].D1 = genD1fD2(v.D2, v.S.SensorsR)
-			if len(r[i].D1) < 1 {
+			r[i].D1, err = genD1fD2(v.D2, v.S.SensorsR)
+			if err != nil || len(r[i].D1) < 1 {
 				Error(v.S.Site.Site + "can not gen 1h data!")
 				err = errors.New(v.S.Site.Site + ": can not gen 1h data!")
 				return
@@ -189,73 +189,54 @@ type ChDecData struct {
 	data  []Data
 }
 
-func decodeDate(data string) (t time.Time, f float64, err error) {
-	var year, month, date, hour, minute int
-	location, _ := time.LoadLocation("Local")
+func decodeDate(data string) (t time.Time, err error) {
+	if re1 := regexp.MustCompile(`(\d{4})[\/|-](\d{1,2})[\/|-](\d{1,2})(\s\w+|)\s(\d{1,2}):(\d{1,2})(:\d{1,2}|)`); re1.MatchString(data) {
+		td := re1.FindStringSubmatch(data)
 
-	re := regexp.MustCompile(`(\d{4})[\/|-](\d{1,2})[\/|-](\d{1,2})(\s\w+|)\s(\d{1,2}):(\d{1,2})(:\d{1,2}|)`)
-	if re.MatchString(data) {
-		td := re.FindStringSubmatch(data)
+		t, err = NewDate(td[1], td[2], td[3], td[5], td[6])
 
-		year, err = strconv.Atoi(td[1])
-		if err != nil {
-			return
-		}
+	} else if re2 := regexp.MustCompile(`(\d{1,2})[\/|-](\d{1,2})[\/|-](\d{4})\s(\d{1,2}):(\d{1,2})(:\d{1,2}|)`); re2.MatchString(data) {
+		td := re2.FindStringSubmatch(data)
 
-		month, err = strconv.Atoi(td[2])
-		if err != nil {
-			return
-		}
+		t, err = NewDate(td[3], td[1], td[2], td[4], td[5])
 
-		date, err = strconv.Atoi(td[3])
-		if err != nil {
-			return
-		}
-
-		hour, err = strconv.Atoi(td[5])
-		if err != nil {
-			return
-		}
-
-		minute, err = strconv.Atoi(td[6])
-		if err != nil {
-			return
-		}
-	} else if re = regexp.MustCompile(`(\d{1,2})[\/|-](\d{1,2})[\/|-](\d{4})\s(\d{1,2}):(\d{1,2})(:\d{1,2}|)`); re.MatchString(data) {
-		td := re.FindStringSubmatch(data)
-
-		year, err = strconv.Atoi(td[3])
-		if err != nil {
-			return
-		}
-
-		month, err = strconv.Atoi(td[1])
-		if err != nil {
-			return
-		}
-
-		date, err = strconv.Atoi(td[2])
-		if err != nil {
-			return
-		}
-
-		hour, err = strconv.Atoi(td[4])
-		if err != nil {
-			return
-		}
-
-		minute, err = strconv.Atoi(td[5])
-		if err != nil {
-			return
-		}
 	} else {
-		err = errors.New("date format err" + data)
+		err = errors.New("decodeDate date format err" + data)
 		return
 	}
 
-	t = time.Date(year, time.Month(month), date, hour, minute, 0, 0, location)
+	return
+}
 
-	f, err = strconv.ParseFloat(t.Format("200601"), 64)
+func NewDate(y, mon, d, h, min string) (t time.Time, err error) {
+	var year, month, date, hour, minute int
+
+	year, err = strconv.Atoi(y)
+	if err != nil {
+		return
+	}
+
+	month, err = strconv.Atoi(mon)
+	if err != nil {
+		return
+	}
+
+	date, err = strconv.Atoi(d)
+	if err != nil {
+		return
+	}
+
+	hour, err = strconv.Atoi(h)
+	if err != nil {
+		return
+	}
+
+	minute, err = strconv.Atoi(min)
+	if err != nil {
+		return
+	}
+
+	t = time.Date(year, time.Month(month), date, hour, minute, 0, 0, LOCATION)
 	return
 }
 
@@ -317,23 +298,33 @@ func existAm(ams []Am, my float64) bool {
 }
 
 func rLostAm(ams []Am) (ams2 []Am, err error) {
-	location, _ := time.LoadLocation("Local")
+	if len(ams) < 1 {
+		err = errors.New("rLostAm not enough data!")
+		return
+	}
 
-	ams2 = append(ams2, ams[0])
+	ams2 = []Am{ams[0]}
 
 	for i := 1; i < len(ams); {
 		j := len(ams2) - 1
 		diff := ams[i].My - ams2[j].My
 
-		if (diff < 89 && diff > 1) || diff > 89 {
-			t := time.Date(int(ams2[j].Year), time.Month(int(ams2[j].Month)+2), 0, 0, 0, 0, 0, location)
+		if diff < 1 {
+			err = errors.New("rLostAm am order err!")
+			return
+		} else if diff == 89 || diff == 1 {
+			ams2 = append(ams2, ams[i])
+			i = i + 1
+		} else {
+			// if (diff < 89 && diff > 1) || diff > 89
+			t := time.Date(int(ams2[j].Year), time.Month(int(ams2[j].Month)+2), 0, 0, 0, 0, 0, LOCATION)
 
 			am := Am{
 				Year:     float64(t.Year()),
 				Month:    float64(t.Month()),
 				NotExist: true,
 			}
-			am.My, err = strconv.ParseFloat(t.Format("200601"), 64)
+			am.My, err = strconv.ParseFloat(t.Format(DATE_FORMAT_MY), 64)
 			if err != nil {
 				Error("rLostAm", err)
 				return
@@ -342,9 +333,6 @@ func rLostAm(ams []Am) (ams2 []Am, err error) {
 			ams2 = append(ams2, am)
 
 			Warn("add am", am.My)
-		} else {
-			ams2 = append(ams2, ams[i])
-			i = i + 1
 		}
 	}
 
@@ -393,35 +381,30 @@ func adjustRAdd(data []Data, ch string, t float64) []Data {
 	return data
 }
 
-func genD1fD2(d2 []Data, s []Sensor) (d1 []Data) {
+func genD1fD2(d2 []Data, s []Sensor) (d1 []Data, err error) {
 	// 假设数据按是严格时间顺序排列
-	location, _ := time.LoadLocation("Local")
 	var ds DB
 	var val time.Time
-	var my float64
 
 	for i, v := range d2 {
 		t := time.Unix(int64(v["Time"]), 0)
 		if i == 0 {
 			val = t
-			my = v["My"]
 		}
-		if i == len(d2)-1 {
-			// 最后一个数据，不要了，写起来真麻烦
-		}
-		if val.Format("2006-01-02-15") == t.Format("2006-01-02-15") {
+
+		if val.Format(DATE_FORMAT_YMHM) == t.Format(DATE_FORMAT_YMHM) && i != len(d2)-1 {
 			ds = append(ds, v)
 			continue
 		}
-		t1 := time.Date(val.Year(), val.Month(), val.Day(), val.Hour(), 0, 0, 0, location)
-		data := Data{
-			"Time":  float64(t1.Unix()),
-			"Hour":  float64(t1.Hour()),
-			"My":    my,
-			"Day":   float64(t1.Day()),
-			"Year":  float64(t1.Year()),
-			"Month": float64(t1.Month()),
+
+		t1 := time.Date(val.Year(), val.Month(), val.Day(), val.Hour(), 0, 0, 0, LOCATION)
+
+		var data Data
+		data, err = NewData(t1)
+		if err != nil {
+			return
 		}
+
 		for _, v1 := range s {
 			ch := v1.Channel
 			data["ChAvg"+ch] = ArrayAvg(ds.get("ChAvg" + ch)["ChAvg"+ch])
@@ -433,8 +416,25 @@ func genD1fD2(d2 []Data, s []Sensor) (d1 []Data) {
 		d1 = append(d1, data)
 
 		val = t
-		my = v["My"]
-		ds = DB{}
+		ds = DB{v}
+	}
+
+	return
+}
+
+func NewData(t time.Time) (data Data, err error) {
+	my, err := strconv.ParseFloat(t.Format(DATE_FORMAT_MY), 64)
+	if err != nil {
+		return
+	}
+
+	data = Data{
+		"Time":  float64(t.Unix()),
+		"Hour":  float64(t.Hour()),
+		"My":    my,
+		"Day":   float64(t.Day()),
+		"Year":  float64(t.Year()),
+		"Month": float64(t.Month()),
 	}
 
 	return
