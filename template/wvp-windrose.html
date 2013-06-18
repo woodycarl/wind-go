@@ -60,8 +60,10 @@ $(document).ready(function(){
 function showWvpFig(id,wvp) {
 	var colors = [];
 	if (wvp.Cats.length <=7) {
-		colors = ["#F70303","#FA8A04","#ABFD03","#02FD22","#01CBFD","#0487FD","#0200FF"];
+		colors = ["#F70303","#FE4504","#ABFD03","#02FD22","#01CBFD","#0487FD","#0200FF"];
 
+	} else if (wvp.Cats.length <=9) {
+		colors = ["#F70303","#FE4504","#FFC803","#ABFD03","#02FD22","#01FDA6","#0487FD","#0142F6","#0200FF"]
 	} else {
 		colors = ["#F70303","#FE4504","#FA8A04","#FFC803","#F4F801","#ABFD03","#60FF00","#02FD22","#01FDA6","#01CBFD","#0487FD","#0142F6","#0200FF"];
 	}
