@@ -53,10 +53,10 @@ func WdvpWindRose(D, V, P []float64, arg WdvpArg) WdvpFs {
 	}
 
 	maxP := ArrayMax(P)
-	catsP := []float64{200.0, 250.0, 500.0, 1000.0, 2000.0}
+	catsP := []float64{200.0, 250.0, 300.0, 500.0, 1000.0, 2000.0}
 	var reals []float64
 	for _, v := range catsP {
-		reals = append(reals, math.Abs(maxP/v-7.0))
+		reals = append(reals, math.Abs(maxP/v-8.0))
 	}
 	index, _ := ArrayMinI(reals)
 

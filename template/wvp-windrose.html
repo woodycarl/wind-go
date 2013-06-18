@@ -58,14 +58,34 @@ $(document).ready(function(){
 });
 
 function showWvpFig(id,wvp) {
+	var colors = [];
+	if (wvp.Cats.length <=7) {
+		colors = ["#F70303","#FA8A04","#ABFD03","#02FD22","#01CBFD","#0487FD","#0200FF"];
+
+	} else {
+		colors = ["#F70303","#FE4504","#FA8A04","#FFC803","#F4F801","#ABFD03","#60FF00","#02FD22","#01FDA6","#01CBFD","#0487FD","#0142F6","#0200FF"];
+	}
+	colors = colors.slice(-wvp.Cats.length);
+
+	var series = [];
+	for (var i=wvp.Cats.length-1; i>=0; i--) {
+		var row = {
+			name: wvp.Cats[i],
+			data: []
+		}
+
+		for (var j=0; j<wvp.Dirs.length; j++) {
+			row.data.push(wvp.Data[j].Data[i]);
+		}
+		series.push(row);
+	}
+
+
+	console.log(series);
+
 	// Parse the data from an inline table using the Highcharts Data plugin
 	$('#chart_wvp_windrose_'+id).highcharts({
-		data: {
-			table: 'data-'+id,
-			startRow: 0,
-			endRow: wvp.Data.length,
-			endColumn: wvp.Cats.length
-		},
+
 
 		chart: {
 			polar: true,
@@ -80,17 +100,7 @@ function showWvpFig(id,wvp) {
 			text: ''
 		},
 
-		colors: [
-        '#11264f',
-        '#145b7d',
-        '#009ad6',
-        '#00ae9d',
-        '#dec674',
-        '#ffc20e',
-        '#ef4136',
-        '#ed1941',
-        '#892f1b'
-    ],
+		colors: colors,
 
 		pane: {
 			size: '85%'
@@ -105,7 +115,8 @@ function showWvpFig(id,wvp) {
 		},
 
 		xAxis: {
-			tickmarkPlacement: 'on'
+			tickmarkPlacement: 'on',
+			categories:wvp.Dirs
 		},
 
 		yAxis: {
@@ -134,7 +145,8 @@ function showWvpFig(id,wvp) {
 				groupPadding: 0,
 				pointPlacement: 'on'
 			}
-		}
+		},
+		series: series
 	});
 }
 

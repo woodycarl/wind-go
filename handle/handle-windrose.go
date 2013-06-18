@@ -15,11 +15,13 @@ type WindRoseData struct {
 	Data []float64
 	Sum  float64
 }
+
 type WindRose struct {
 	Title   string
 	Channel string
 	Height  int
 	Cats    []string
+	Dirs    []string
 	Data    []WindRoseData
 	Sums    []float64
 }
@@ -128,11 +130,13 @@ func formatWindRoseData(wdvpFs wind.WdvpFs, catsD []string) (WindRose, WindRose)
 
 	windRoseV := WindRose{
 		Cats: catsV,
+		Dirs: catsD,
 		Data: dataVs,
 		Sums: wdvpFs.SumV,
 	}
 	windRoseP := WindRose{
 		Cats: catsP,
+		Dirs: catsD,
 		Data: dataPs,
 		Sums: wdvpFs.SumP,
 	}
